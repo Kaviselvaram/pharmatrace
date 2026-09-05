@@ -1,140 +1,169 @@
 # PROJECT SOURCE OF TRUTH: Blockchain-Based Supply Chain Simulation Framework
-**Cryptographic Traceability & Self-Healing Cold-Chain Logistics via Virtualized Telemetry**  
-*Authoritative Master Reference for Engineering Teams and AI Coding Agents*
+**Cryptographic Traceability, Algorithmic Verification & Autonomous Digital Recovery**  
+*Authoritative Master Engineering Reference & Specification (Locked Post-Technical Audit)*
 
 ---
 
-## 1. PROJECT METADATA & VISION
-- **Project Name**: Virtualized Blockchain Supply Chain Simulation Framework (Pharma Cold-Chain)
-- **Academic Context**: Information Security (CBS3002) - Review 2 (Kaviselvaram 24BBS00072 & Aniesh S 24BBS00084, Slot L21+L22)
-- **Product Archetype**: Enterprise Pharma Cold-Chain Traceability, Chaos Attack Simulator, and Autonomous Self-Healing SaaS Prototype.
-- **Core Philosophy**: *"Replacing institutional trust with algorithmic verification."*
-- **Target Cost**: **₹0.00 / $0.00** across entire development, execution, and local/cloud deployment lifecycle.
+## 1. PROJECT IDENTITY & GOVERNANCE
+- **Project Name**: Virtualized Blockchain Supply Chain Framework (Pharma Cold-Chain)
+- **Academic Origin**: CBS3002 Information Security Review 2 (Kaviselvaram 24BBS00072 & Aniesh S 24BBS00084, Slot L21+L22)
+- **Product Archetype**: Enterprise Pharmaceutical Cold-Chain Traceability, Attack Laboratory & Autonomous Replenishment SaaS Prototype.
+- **Core Axiom**: *"Replacing institutional trust with algorithmic verification."*
+- **Operational Cost**: **₹0.00 / $0.00** across entire development, execution, and local/cloud deployment lifecycle.
+- **Current Status**: **AUDITED, CORRECTED & LOCKED FOR IMPLEMENTATION**.
 
 ---
 
-## 2. STRICT CONSTRAINTS & FORBIDDEN ARCHITECTURAL DRIFT (AI GUARDRAILS)
-Any coding agent or contributor working on this repository **MUST NOT** violate these non-negotiable rules:
+## 2. STRICT CONSTRAINTS & FORBIDDEN ARCHITECTURAL DRIFT
+All coding agents and contributors must strictly enforce these non-negotiable rules:
 
-1. **NO FAKE OR MOCKED CRYPTOGRAPHY**:
-   - Every telemetry packet MUST be signed using real ECDSA secp256k1 keys.
-   - Hashes MUST use native `keccak256` (or SHA-256 where specified).
-   - Smart contracts MUST execute native EVM `ecrecover` to extract signer addresses. Mocked booleans (e.g. `return true;`) are strictly forbidden.
-2. **NO PHYSICAL IOT HARDWARE DEPENDENCY**:
-   - Sensor data is generated via software virtualization in the Python simulation engine (`backend/app/engine/`).
-   - Do NOT introduce dependencies on physical serial ports, Arduinos, or physical hardware dongles.
-3. **NO MANDATORY PAID SAAS / APIS**:
-   - Zero hard dependencies on paid cloud services (No paid Infura, Alchemy, Datadog, AWS IoT, or OpenAI paid tiers).
-   - The local EVM ledger runs via Hardhat / Anvil at `http://127.0.0.1:8545`.
-   - AI features use local Scikit-Learn physics regression and free Google Gemini Flash API tiers with deterministic offline fallbacks.
-4. **NO UNCONTROLLED DATABASE BLOAT ON-CHAIN**:
-   - High-frequency continuous telemetry streams (e.g. every 2 seconds) MUST be cached off-chain in SQLite/PostgreSQL.
-   - ONLY batch creations, custody handover multi-sigs, periodic state checkpoints, threshold breach events, and quarantine transitions are committed on-chain.
-5. **NO GENERIC BOOTSTRAP / LOW-EFFORT UI**:
-   - The frontend MUST maintain the bespoke **Obsidian Cyber-Clinical** dark design system with custom CSS tokens, glassmorphism, animated waveforms, real-time Leaflet maps, and interactive block inspectors.
-
----
-
-## 3. MASTER TECHNOLOGY STACK
-
-| Component | Selected Technology | Version / Standard | Classification | Cost |
-| :--- | :--- | :--- | :--- | :--- |
-| **Smart Contracts** | Solidity | `^0.8.28` | `OPEN SOURCE` | ₹0 |
-| **EVM Development Suite** | Hardhat / Hardhat Network | `^2.22.x` | `OPEN SOURCE` | ₹0 |
-| **Contract Verification** | OpenZeppelin Contracts | `^5.x` | `OPEN SOURCE` | ₹0 |
-| **Backend & API** | FastAPI (Python) | `3.13.x` / `0.115+` | `OPEN SOURCE` | ₹0 |
-| **Blockchain Bridge** | Web3.py + eth-account | `^7.x` | `OPEN SOURCE` | ₹0 |
-| **Simulation Engine** | Python `asyncio` & `threading` | Native Python 3.13 | `OPEN SOURCE` | ₹0 |
-| **Off-Chain Database** | SQLite (Dev/Local) / PostgreSQL | Standard SQL | `OPEN SOURCE` | ₹0 |
-| **Frontend Framework** | React 19 + Vite | `^19.x` / `^6.x` | `OPEN SOURCE` | ₹0 |
-| **Styling & Design System** | Vanilla CSS Custom Tokens | CSS3 / Glassmorphism | `OPEN SOURCE` | ₹0 |
-| **Geospatial Map** | Leaflet.js + OpenStreetMap | `^1.9.x` | `OPEN SOURCE` | ₹0 |
-| **Local AI Engine** | Scikit-Learn | `^1.6.x` | `OPEN SOURCE` | ₹0 |
-| **Auditor AI Assistant** | Google Gemini 1.5 Flash (Free Tier) | Gemini Free API | `FREE TIER` | ₹0 |
-| **Orchestration** | Docker & Docker Compose | Compose v2 | `OPEN SOURCE` | ₹0 |
+1. **CRYPTOGRAPHIC AUTHENTICITY (NO MOCKED CRYPTO)**:
+   - Every telemetry packet MUST be signed with a real secp256k1 private key.
+   - Hashes MUST use native `keccak256`.
+   - On-chain verification MUST execute native EVM `ecrecover`. No mock signatures or fake booleans.
+2. **DOCKER ENVIRONMENT ISOLATION (ZERO HOST/CONTAINER INTERFERENCE)**:
+   - There is an active external project (`finops`) on this machine.
+   - Compose project name MUST be `-p infosecproj`.
+   - Never run global Docker commands (`docker system prune`, `docker volume prune`, `docker network prune`, `docker compose down` without project flag).
+   - Dedicated Host Ports to prevent collision:
+     - **Frontend**: Host `5174` (Container: `80` / `5173`)
+     - **Backend API**: Host `8001` (Container: `8000`)
+     - **Local EVM RPC**: Host `8546` (Container: `8545`)
+     - **Database**: Local file SQLite (Zero port footprint), or Host `5434` for Postgres.
+3. **HARDWARE-FREE VIRTUALIZATION**:
+   - Zero dependency on physical microcontrollers (Raspberry Pi/Arduino).
+   - Telemetry generated via deterministic Python physics simulation.
+4. **HYBRID STORAGE & NO BLOCKCHAIN BLOAT**:
+   - High-frequency time-series telemetry (sampled every 2–5s) is stored off-chain in SQLite.
+   - ONLY batch genesis, multi-sig custody handovers, periodic state commitments, threshold violations, and quarantine transitions are committed on-chain.
+5. **ZERO-COST & OFFLINE-FIRST**:
+   - Zero mandatory paid APIs. Google Gemini LLM is strictly an optional enhancement with a 100% offline deterministic Jinja2 fallback.
+6. **NO FAKE CLAIMS (TERMINOLOGY DISCIPLINE)**:
+   - Smart contracts cannot physically repair a compressor. Use "Autonomous Digital Recovery & Orchestrated Replenishment", not "self-healing hardware".
+   - Do not claim "FDA Approved"; use "Engineered to align with FDA 21 CFR Part 11 electronic records controls".
 
 ---
 
-## 4. FIVE-LAYER ARCHITECTURAL BLUEPRINT
+## 3. CANONICAL CRYPTOGRAPHIC SPECIFICATION
 
-```text
-[Layer 1: Virtualized Telemetry] ──> Emulated Manufacturer, Carrier, Hospital nodes generating physics-based temp/GPS/humidity
-               │
-[Layer 2: Cryptographic Security] ──> Keccak-256 payload hashing + secp256k1 ECDSA digital signature + nonces
-               │
-[Layer 3: Core App & Services]   ──> FastAPI REST & WebSocket server, Chaos Attack Injector, Scikit-learn Anomaly Predictor
-               │
-[Layer 4: Decentralized Ledger]  ──> Local EVM node running Registry, BatchManager, TelemetryVerifier, Custody, SelfHealing
-               │
-[Layer 5: Presentation & UX]     ──> React Cyber-Clinical Dashboard, Live Transit Map, Chaos Studio, Public QR Scanner
-```
+To ensure zero hash divergence between Python (`web3.py` / `eth_account`) and Solidity (`abi.encodePacked`), all telemetry packets follow this exact canonical binary layout:
+
+### 3.1 Field Order & Types
+1. `bytes32 batchId`: Unique 32-byte identifier of the pharmaceutical batch.
+2. `int16 temperatureScaled`: Temperature in Celsius scaled by 100 (e.g., $4.25^\circ\text{C} = 425$; $-18.50^\circ\text{C} = -1850$).
+3. `int32 latitudeScaled`: GPS Latitude scaled by $10^6$ (e.g., $12.971600 = 12971600$).
+4. `int32 longitudeScaled`: GPS Longitude scaled by $10^6$ (e.g., $77.594600 = 77594600$).
+5. `uint32 timestamp`: UNIX epoch timestamp in seconds.
+6. `uint256 nonce`: Strictly monotonic integer nonce tracked per batch and custodian.
+
+### 3.2 Canonical Hash Formula
+$$\text{PayloadBytes} = \text{batchId} \mathbin{\Vert} \text{int16}(T) \mathbin{\Vert} \text{int32}(\text{lat}) \mathbin{\Vert} \text{int32}(\text{lon}) \mathbin{\Vert} \text{uint32}(t) \mathbin{\Vert} \text{uint256}(\text{nonce})$$
+$$\text{MessageHash} = \text{keccak256}(\text{PayloadBytes})$$
+$$\text{EthSignedMessageHash} = \text{keccak256}(\text{"\x19Ethereum Signed Message:\n32"} \mathbin{\Vert} \text{MessageHash})$$
+$$\text{SignerAddress} = \text{ecrecover}(\text{EthSignedMessageHash}, v, r, s)$$
 
 ---
 
-## 5. SMART CONTRACT SPECIFICATION & ON-CHAIN STATE
+## 4. SMART CONTRACT ARCHITECTURE (CONSOLIDATED & HARDENED)
+
+To eliminate cross-contract call complexity and gas waste, the on-chain architecture is streamlined into two core contracts:
 
 1. **`SupplyChainRegistry.sol`**:
-   - Manages role authorization (`MANUFACTURER`, `DISTRIBUTOR`, `CARRIER`, `HOSPITAL`, `AUDITOR`).
-   - Maps Ethereum public addresses to corporate identities and verification public keys.
-2. **`BatchManager.sol`**:
-   - Digital twin of pharmaceutical lots (`batchId`, `productName`, `minTemp`, `maxTemp`, `currentCustodian`, `status`).
-   - Status Enum: `CREATED (0)`, `IN_TRANSIT (1)`, `DELIVERED (2)`, `QUARANTINED (3)`, `REPLENISHED (4)`.
-3. **`TelemetryVerifier.sol`**:
-   - Performs `ecrecover(keccak256(data), v, r, s)`.
-   - Validates that signer matches `currentCustodian`.
-   - Checks compliance: `minTemp <= temp <= maxTemp`. If violated, emits `ColdChainBreach` and triggers `SelfHealingController`.
-4. **`CustodyHandover.sol`**:
-   - Executes atomic $2\text{-of-}2$ multi-signature transfers between relinquishing custodian and receiving custodian.
-5. **`SelfHealingController.sol`**:
-   - On breach event, immediately sets batch status to `QUARANTINED`.
-   - Emits `ReplenishmentDispatched` event, creating an expedited digital twin replacement batch linked to the original failed lot.
+   - Role-Based Access Control (`MANUFACTURER`, `CARRIER`, `HOSPITAL`, `AUDITOR`).
+   - Maps public Ethereum addresses to authorized corporate nodes.
+2. **`PharmaSupplyChain.sol`**:
+   - Consolidated state machine combining Batch Lifecycle, Multi-Sig Handover, Telemetry Verification, and Quarantine/Replenishment Triggers.
+   - States: `CREATED (0)`, `IN_TRANSIT (1)`, `DELIVERED (2)`, `QUARANTINED (3)`, `REPLENISHED (4)`.
+   - Modifiers: `onlyRole`, `onlyCustodian`, `validNonce`.
 
 ---
 
-## 6. OFF-CHAIN TIME-SERIES & TELEMETRY CONTRACTS
+## 5. SIMULATION & CHAOS SPECIFICATION
 
-### 6.1 Telemetry Payload Schema (JSON-LD Compliant)
-```json
-{
-  "batchId": "0x7b61...c9",
-  "temperature": 4.25,
-  "humidity": 48.2,
-  "latitude": 12.9716,
-  "longitude": 77.5946,
-  "timestamp": 1772798400,
-  "nonce": 1042,
-  "custodianAddress": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-  "signature": {
-    "v": 27,
-    "r": "0x8f2d...3a",
-    "s": "0x1c4b...9e"
-  }
-}
+### 5.1 Deterministic Simulation Profiles (`seed=42`)
+- **Profile A (Nominal Transit)**: $T \in [3.8^\circ\text{C}, 5.2^\circ\text{C}]$, vehicle travels on Bangalore-Chennai corridor, handover confirmed.
+- **Profile B (Compressor Excursion)**: Refrigeration failure at step 15, temperature climbs at $+0.4^\circ\text{C}/\text{s}$, reaches $8.1^\circ\text{C}$ at step 25 $\rightarrow$ Auto-Quarantine and Replenishment event emitted.
+- **Profile C (MITM Data Tamper Attack)**: Attacker intercepts packet and edits temperature reading from $12.5^\circ\text{C}$ to $4.2^\circ\text{C}$. Recovered address $\ne$ Custodian address $\rightarrow$ Transaction reverts with `INVALID_SIGNATURE`.
+- **Profile D (Replay Attack)**: Stale nonce resubmitted $\rightarrow$ Reverts with `REPLAY_ATTACK_DETECTED`.
+
+---
+
+## 6. FINAL MONOREPO DIRECTORY STRUCTURE
+
+```text
+Infosecproj/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── contracts/                        # Hardhat Solidity Suite
+│   ├── contracts/
+│   │   ├── SupplyChainRegistry.sol
+│   │   └── PharmaSupplyChain.sol
+│   ├── scripts/
+│   │   ├── deploy.js
+│   │   └── seed.js
+│   ├── test/
+│   │   ├── Registry.test.js
+│   │   └── PharmaSupplyChain.test.js
+│   ├── hardhat.config.js
+│   └── package.json
+├── backend/                          # FastAPI Modular Application
+│   ├── app/
+│   │   ├── core/
+│   │   │   ├── config.py             # Isolated port configs & env vars
+│   │   │   ├── security.py           # Canonical Keccak + secp256k1 utils
+│   │   │   └── database.py           # SQLite connection pool
+│   │   ├── domain/
+│   │   │   ├── models.py             # SQLAlchemy models
+│   │   │   └── schemas.py            # Pydantic v2 schemas
+│   │   ├── engine/
+│   │   │   ├── simulator.py          # Deterministic physics engine
+│   │   │   ├── telemetry_node.py     # Virtual node signer
+│   │   │   ├── attack_injector.py    # Chaos attack triggers
+│   │   │   └── predictor.py          # Thermal decay math & anomaly detector
+│   │   ├── services/
+│   │   │   ├── web3_service.py       # Web3.py RPC client
+│   │   │   ├── supply_chain_service.py
+│   │   │   └── audit_reporter.py     # Offline markdown + optional Gemini
+│   │   ├── api/
+│   │   │   ├── v1/
+│   │   │   │   ├── batches.py
+│   │   │   │   ├── telemetry.py
+│   │   │   │   ├── simulation.py
+│   │   │   │   └── blockchain.py
+│   │   │   └── websocket.py          # Telemetry broadcaster
+│   │   └── main.py                   # FastAPI app entrypoint
+│   ├── requirements.txt
+│   └── tests/
+├── frontend/                         # React 19 + Vite (Cyber-Clinical)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── layout/               # Header, Sidebar, AlertTicker
+│   │   │   ├── dashboard/            # Waveform, LeafletMap, BatchList
+│   │   │   ├── chaos/                # Attack panel & tamper diff viewer
+│   │   │   ├── explorer/             # Block feed & signature dissector
+│   │   │   └── portal/               # Consumer QR scanner & certificate
+│   │   ├── styles/
+│   │   │   ├── tokens.css            # Custom CSS properties
+│   │   │   └── main.css
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
+├── docs/                             # Authoritative Documentation
+├── phases/                           # Executable Phase MDs
+├── docker-compose.yml                # Isolated Compose (-p infosecproj)
+├── PROJECT_SOURCE_OF_TRUTH.md        # Locked Source of Truth
+└── README.md                         # Master Presentation Guide
 ```
 
 ---
 
-## 7. EXECUTION ROADMAP & PHASE SEQUENCING
-
-| Phase Code | Phase Name | Status |
-| :--- | :--- | :--- |
-| **P00** | Project Intelligence, Environment & Foundation | **COMPLETED / IN PROGRESS** |
-| **P01** | Smart Contract Suite & Local EVM Ledger | PENDING |
-| **P02** | Cryptographic Signing & Simulation Engine | PENDING |
-| **P03** | FastAPI Backend Gateway & Web3.py Bridge | PENDING |
-| **P04** | Design System, UI Tokens & Atomic Components | PENDING |
-| **P05** | Real-Time Command Center & Live Transit Map | PENDING |
-| **P06** | Interactive Chaos Studio & Attack Simulator | PENDING |
-| **P07** | Self-Healing Pipeline & Autonomous Replenishment | PENDING |
-| **P08** | Public Consumer QR Portal & Regulatory Inspector | PENDING |
-| **P09** | AI Anomaly Predictor & Narrative Audit Generator | PENDING |
-| **P10** | End-to-End Testing & Security Static Analysis | PENDING |
-| **P11** | Docker Compose Orchestration & Demo Runbook | PENDING |
-
----
-
-## 8. DEFINITION OF PROJECT SUCCESS
-The project will be validated against three critical scenarios during viva and market review:
-1. **Scenario 1 (Nominal Transit)**: A batch travels across 3 nodes with temperatures between 2°C–8°C. Custody is transferred cleanly via multi-sig. Patient scans QR code $\rightarrow$ "VERIFIED AUTHENTIC & UNBROKEN COLD CHAIN".
-2. **Scenario 2 (Compressor Failure & Self-Healing)**: Chaos studio spikes temperature to 11.8°C. The smart contract rejects the reading, automatically transitions state to `QUARANTINED`, emits a replenishment event, and dispatches a backup batch without human downtime.
-3. **Scenario 3 (Insider Tamper Attack)**: An insider modifies a 12°C reading to 4°C in transit without the private key. EVM `ecrecover` detects signature mismatch, rejects transaction, logs cryptographic tamper evidence, and flags the compromised carrier.
+## 7. DEFINITION OF DONE FOR GOLDEN PATH ACCEPTANCE
+The project is complete when an automated script runs the entire golden path end-to-end:
+1. `Manufacturer` mints lot `LOT-VAX-01` ($2.0^\circ\text{C}$ to $8.0^\circ\text{C}$).
+2. `Carrier` receives custody via dual multi-sig handover.
+3. Telemetry streams with valid ECDSA signatures; verified on-chain.
+4. Excursion injected $\rightarrow$ EVM quarantines lot $\rightarrow$ auto-replenishment dispatched.
+5. Tampered packet injected $\rightarrow$ EVM reverts with `INVALID_SIGNATURE`.
+6. Consumer scans QR code $\rightarrow$ view verified cryptographic audit log.

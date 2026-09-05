@@ -1,83 +1,115 @@
-# Cryptographic Specification & Key Management
-**ECDSA secp256k1, Keccak-256 & Replay Protection Architecture**
+# Cryptographic Specification & Canonical Encoding
+**Native ECDSA secp256k1, Keccak-256 & Mathematical Determinism**
 
 ---
 
-## 1. CRYPTOGRAPHIC FOUNDATION
+## 1. CANONICAL MESSAGE SPECIFICATION
 
-The framework enforces zero-trust data provenance using Ethereum's native cryptographic primitives:
+To guarantee zero hash discrepancy between Python (`web3.py` / `eth_account`) and Solidity (`abi.encodePacked`), all telemetry packets adhere to this exact binary structure:
 
-| Component | Standard / Primitive | Role in Architecture |
-| :--- | :--- | :--- |
-| **Elliptic Curve** | `secp256k1` | Asymmetric keypair generation for virtualized edge nodes. |
-| **Digital Signature** | ECDSA ($v, r, s$) | Non-repudiation and cryptographic proof of origin. |
-| **Cryptographic Hash** | `Keccak-256` | Payload fingerprinting and Ethereum prefix hashing. |
-| **On-Chain Verification**| EVM opcode `0x01` (`ecrecover`) | Deterministic signature recovery on the decentralized ledger. |
+### 1.1 Field Ordering & Precise Types
+| Order | Field Name | Data Type | Scaling Factor | Example Value | Encoded Bytes (Hex) |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **1** | `batchId` | `bytes32` | None | `0x4a9b...f1` | 32 bytes |
+| **2** | `temperature` | `int16` | $\times 100$ | $4.25^\circ\text{C} \rightarrow 425$ | 2 bytes (Big Endian) |
+| **3** | `latitude` | `int32` | $\times 10^6$ | $12.971600 \rightarrow 12971600$ | 4 bytes (Big Endian) |
+| **4** | `longitude` | `int32` | $\times 10^6$ | $77.594600 \rightarrow 77594600$ | 4 bytes (Big Endian) |
+| **5** | `timestamp` | `uint32` | None | $1772798400$ | 4 bytes (Big Endian) |
+| **6** | `nonce` | `uint256` | None | $1042$ | 32 bytes (Big Endian) |
 
----
-
-## 2. SIGNATURE LIFECYCLE & PACKET FORMAT
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Node as Virtual Edge Node (Python)
-    participant Hash as Keccak-256 Engine
-    participant Sign as secp256k1 Private Key
-    participant Eth as Ethereum EVM (ecrecover)
-
-    Node->>Node: Format Canonical Payload: [batchId, temp, lat, lon, time, nonce]
-    Node->>Hash: Hash Canonical Bytes
-    Hash-->>Node: 32-Byte Hash (h)
-    Node->>Sign: Sign Hash h with Node Private Key
-    Sign-->>Node: Signature Tuple: (v, r, s)
-    Node->>Eth: Broadcast Transaction: submitSignedTelemetry(..., v, r, s)
-    Eth->>Eth: Reconstruct h from calldata
-    Eth->>Eth: Prefix with "\x19Ethereum Signed Message:\n32"
-    Eth->>Eth: ecrecover(prefixed_hash, v, r, s) => Signer Address
-    Eth->>Eth: Check: Signer Address == Registered Custodian Address
-```
+Total canonical byte length: $32 + 2 + 4 + 4 + 4 + 32 = 78\text{ bytes}$.
 
 ---
 
-## 3. CANONICAL ENCODING & PACKING
-To prevent hash divergence between Python (off-chain) and Solidity (on-chain), data must be encoded in tight binary representation:
+## 2. PYTHON CANONICAL IMPLEMENTATION (`backend/app/core/security.py`)
 
-### Off-Chain (Python / `eth-account`):
 ```python
 from eth_account.messages import encode_defunct
+from eth_account import Account
 from eth_utils import keccak
 
-# Scale float numbers to fixed-point integers
-temp_scaled = int(round(temperature * 100))      # e.g., 4.25°C -> 425
-lat_scaled = int(round(latitude * 1000000))      # e.g., 12.9716 -> 12971600
-lon_scaled = int(round(longitude * 1000000))     # e.g., 77.5946 -> 77594600
+def create_canonical_payload(batch_id_hex: str, temp_celsius: float, lat: float, lon: float, timestamp: int, nonce: int) -> bytes:
+    # 1. Clean hex string
+    clean_batch_id = bytes.fromhex(batch_id_hex.replace("0x", ""))
+    if len(clean_batch_id) != 32:
+        raise ValueError("batch_id must be exactly 32 bytes")
 
-# Canonical abi.encodePacked equivalent:
-encoded_bytes = (
-    bytes.fromhex(batch_id.replace("0x", "")) +
-    temp_scaled.to_bytes(2, byteorder="big", signed=True) +
-    lat_scaled.to_bytes(4, byteorder="big", signed=True) +
-    lon_scaled.to_bytes(4, byteorder="big", signed=True) +
-    int(timestamp).to_bytes(4, byteorder="big", signed=False) +
-    int(nonce).to_bytes(4, byteorder="big", signed=False)
-)
+    # 2. Scale fixed-point numbers
+    temp_scaled = int(round(temp_celsius * 100))
+    lat_scaled = int(round(lat * 1000000))
+    lon_scaled = int(round(lon * 1000000))
 
-message_hash = keccak(encoded_bytes)
-signable_message = encode_defunct(message_hash)
-signed_tx = account.sign_message(signable_message)
+    # 3. Pack in strict big-endian binary format
+    payload = (
+        clean_batch_id +
+        temp_scaled.to_bytes(2, byteorder="big", signed=True) +
+        lat_scaled.to_bytes(4, byteorder="big", signed=True) +
+        lon_scaled.to_bytes(4, byteorder="big", signed=True) +
+        int(timestamp).to_bytes(4, byteorder="big", signed=False) +
+        int(nonce).to_bytes(32, byteorder="big", signed=False)
+    )
+    return payload
 
-v = signed_tx.v
-r = signed_tx.r.to_bytes(32, byteorder="big")
-s = signed_tx.s.to_bytes(32, byteorder="big")
+def sign_telemetry(private_key: str, batch_id_hex: str, temp: float, lat: float, lon: float, timestamp: int, nonce: int):
+    payload_bytes = create_canonical_payload(batch_id_hex, temp, lat, lon, timestamp, nonce)
+    message_hash = keccak(payload_bytes)
+    
+    # EIP-191 personal sign format
+    signable_message = encode_defunct(message_hash)
+    signed_data = Account.sign_message(signable_message, private_key=private_key)
+    
+    return {
+        "message_hash": "0x" + message_hash.hex(),
+        "v": signed_data.v,
+        "r": "0x" + signed_data.r.to_bytes(32, byteorder="big").hex(),
+        "s": "0x" + signed_data.s.to_bytes(32, byteorder="big").hex()
+    }
 ```
 
 ---
 
-## 4. REPLAY ATTACK MITIGATION
-Replay attacks occur when an adversary intercepts a previously valid telemetry reading (e.g., $4^\circ\text{C}$ recorded yesterday) and re-broadcasts it during a live temperature excursion to deceive the system.
+## 3. SOLIDITY ON-CHAIN RECONSTRUCTION (`PharmaSupplyChain.sol`)
 
-### Concrete Defenses:
-1. **Monotonic Nonce**: Each node tracks an incrementing integer nonce per batch. The smart contract maintains `mapping(bytes32 => mapping(address => uint256)) public lastNonce`. If `incomingNonce <= lastNonce`, the transaction reverts with `"Replay attack detected"`.
-2. **Timestamp Window Verification**: The incoming timestamp must be within an acceptable clock drift window ($\pm 60\text{ seconds}$) of the current block timestamp:
-   `require(timestamp <= block.timestamp + 60 && timestamp >= block.timestamp - 300, "Timestamp out of bounds");`
+```solidity
+function verifyTelemetrySignature(
+    bytes32 batchId,
+    int16 temperatureScaled,
+    int32 latitudeScaled,
+    int32 longitudeScaled,
+    uint32 timestamp,
+    uint256 nonce,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+) public pure returns (address recoveredSigner, bytes32 messageHash) {
+    // 1. Pack exact 78 bytes in identical sequence
+    bytes memory payload = abi.encodePacked(
+        batchId,
+        temperatureScaled,
+        latitudeScaled,
+        longitudeScaled,
+        timestamp,
+        nonce
+    );
+
+    messageHash = keccak256(payload);
+
+    // 2. Reconstruct EIP-191 eth_sign prefix
+    bytes32 ethSignedHash = keccak256(
+        abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
+    );
+
+    // 3. Native EVM ecrecover execution
+    recoveredSigner = ecrecover(ethSignedHash, v, r, s);
+    require(recoveredSigner != address(0), "ECDSA: invalid signature");
+}
+```
+
+---
+
+## 4. SECURITY & REPLAY MITIGATION
+1. **Monotonic Nonces**: Each batch tracks an integer counter mapped to the custodian:
+   `mapping(bytes32 => mapping(address => uint256)) public lastNonce;`
+   Any incoming `nonce <= lastNonce` will revert immediately.
+2. **Clock Drift Envelope**: Timestamps must fall within $[-300\text{s}, +60\text{s}]$ of current `block.timestamp`.
+3. **Malleability Protection**: Signatures must satisfy standard Ethereum $s$-value limits ($s \le \text{secp256k1n} / 2$) to prevent signature malleability attacks.
