@@ -1,0 +1,20 @@
+{
+  "name": "infosec-contracts",
+  "version": "1.0.0",
+  "description": "Hardhat Solidity contracts for Pharma Cold-Chain Cryptographic Traceability",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node --port 8545",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost"
+  },
+  "keywords": ["blockchain", "solidity", "supply-chain", "infosec", "ecdsa"],
+  "author": "Kaviselvaram & Aniesh S",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.2.0",
+    "hardhat": "^2.22.18"
+  }
+}

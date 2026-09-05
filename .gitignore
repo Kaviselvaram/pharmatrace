@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Hardhat build artifacts
+contracts/artifacts/
+contracts/cache/
+
+# Frontend build
+frontend/dist/
+frontend/.vite/
+
+# Databases & local state
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+*.db
+
+# Environment & logs
+.env
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db
