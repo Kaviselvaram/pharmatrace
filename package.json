@@ -1,0 +1,25 @@
+{
+  "name": "infosecproj-root",
+  "version": "1.0.0",
+  "description": "Blockchain-Based Pharmaceutical Supply Chain Simulation Framework",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix contracts test",
+    "test:contracts": "npm --prefix contracts test",
+    "test:backend": "PYTHONPATH=backend .venv/bin/pytest -v backend/tests",
+    "verify": "./scripts/verify_all.sh"
+  },
+  "keywords": [
+    "blockchain",
+    "supply-chain",
+    "solidity",
+    "fastapi",
+    "react",
+    "ecdsa",
+    "cold-chain"
+  ],
+  "author": "Kaviselvaram Kathirvel & Aniesh S",
+  "license": "MIT"
+}

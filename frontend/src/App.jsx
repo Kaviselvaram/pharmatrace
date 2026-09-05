@@ -68,7 +68,7 @@ export default function App() {
 
   // WebSocket event listener
   const handleWebSocketMessage = useCallback((msg) => {
-    if (msg.type === "TELEMETRY_PACKET") {
+    if (msg.type === "TELEMETRY_PACKET" || msg.type === "TELEMETRY_STREAM") {
       const packet = msg.data;
       setLastPacket(packet);
       setTelemetryHistory((prev) => {
@@ -86,6 +86,10 @@ export default function App() {
     } else if (msg.type === "CUSTODY_TRANSFERRED") {
       showToast(`CUSTODY HANDOVER: Custody transferred on-chain to ${msg.data.new_custodian?.substring(0, 10)}...`, "success");
       loadBatches();
+    } else if (msg.type === "CHAOS_ATTACK_TRIGGERED") {
+      showToast(`CHAOS STUDIO: ${msg.data.attack_type} injected into vehicle telemetry!`, "warning");
+    } else if (msg.type === "CHAOS_ATTACK_RESET") {
+      showToast("CHAOS STUDIO: Adversarial attacks cleared. Restored nominal physics.", "info");
     }
   }, [loadBatches]);
 
