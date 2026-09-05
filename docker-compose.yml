@@ -1,0 +1,58 @@
+services:
+  blockchain:
+    image: node:20-alpine
+    container_name: infosecproj-blockchain
+    working_dir: /app
+    volumes:
+      - ./contracts:/app
+    ports:
+      - "8546:8545"
+    command: sh -c "npm install && npx hardhat node --hostname 0.0.0.0"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8545"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - infosecproj_net
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: infosecproj-backend
+    ports:
+      - "8001:8000"
+    environment:
+      - RPC_URL=http://blockchain:8545
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/infosecproj.db
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - infosecproj_db_data:/app/data
+      - ./contracts/deployments:/app/contracts/deployments
+    depends_on:
+      blockchain:
+        condition: service_healthy
+    networks:
+      - infosecproj_net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: infosecproj-frontend
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+    networks:
+      - infosecproj_net
+
+networks:
+  infosecproj_net:
+    name: infosecproj_net
+    driver: bridge
+
+volumes:
+  infosecproj_db_data:
+    name: infosecproj_db_data

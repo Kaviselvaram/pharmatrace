@@ -1,0 +1,51 @@
+:root {
+  /* Surface & Canvas Colors */
+  --bg-canvas: #07090E;
+  --bg-surface: #0E131F;
+  --bg-surface-elevated: #151C2E;
+  --bg-surface-hover: #1C253D;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.15);
+  --border-active: rgba(0, 240, 255, 0.5);
+
+  /* Cyber-Clinical Color Palette */
+  --cyan-primary: #00F0FF;
+  --cyan-dim: rgba(0, 240, 255, 0.15);
+  --cyan-glow: 0 0 20px rgba(0, 240, 255, 0.35);
+
+  --emerald-success: #00FF88;
+  --emerald-dim: rgba(0, 255, 136, 0.15);
+  --emerald-glow: 0 0 20px rgba(0, 255, 136, 0.35);
+
+  --amber-warning: #FFB800;
+  --amber-dim: rgba(255, 184, 0, 0.15);
+  --amber-glow: 0 0 20px rgba(255, 184, 0, 0.35);
+
+  --crimson-alert: #FF0055;
+  --crimson-dim: rgba(255, 0, 85, 0.18);
+  --crimson-glow: 0 0 25px rgba(255, 0, 85, 0.45);
+
+  --purple-accent: #A855F7;
+  --purple-dim: rgba(168, 85, 247, 0.15);
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Elevation & Shadows */
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  --glass-bg: rgba(14, 19, 31, 0.82);
+  --glass-blur: blur(14px);
+
+  /* Layout Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+}
