@@ -1,22 +1,40 @@
 import React, { useState } from "react";
-import { Zap, ShieldAlert, AlertTriangle, RefreshCw, Lock, Terminal } from "lucide-react";
+import { Zap, ShieldAlert, AlertTriangle, RefreshCw, Lock, Terminal, Play, CheckCircle2 } from "lucide-react";
 import { api } from "../../services/api";
 
-export default function ChaosStudio({ activeBatchId, lastPacket, onAttackInjected }) {
+export default function ChaosStudio({
+  activeBatchId,
+  batches = [],
+  onSelectBatch,
+  isSimulationRunning,
+  onStartSimulation,
+  lastPacket,
+  onAttackInjected
+}) {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
 
+  const selectedBatch = batches.find(b => b.batch_id === activeBatchId) || batches[0];
+  const currentBatchId = activeBatchId || selectedBatch?.batch_id;
+
   async function handleInject(attackType, tamperDelta = -8.0) {
-    if (!activeBatchId) {
-      alert("Please select or start a batch on the Command Center first!");
+    if (!currentBatchId) {
+      setStatusMessage({ type: "error", text: "Please select or create a batch first!" });
       return;
     }
 
     setLoading(true);
     setStatusMessage(null);
     try {
-      const resp = await api.injectAttack({
-        batch_id: activeBatchId,
+      // If simulation is not running for this batch, start it first
+      if (!isSimulationRunning && onStartSimulation) {
+        await onStartSimulation(currentBatchId);
+        // Small delay to allow simulation task initialization
+        await new Promise(r => setTimeout(r, 600));
+      }
+
+      await api.injectAttack({
+        batch_id: currentBatchId,
         attack_type: attackType,
         tamper_delta: tamperDelta,
       });
@@ -30,10 +48,10 @@ export default function ChaosStudio({ activeBatchId, lastPacket, onAttackInjecte
   }
 
   async function handleReset() {
-    if (!activeBatchId) return;
+    if (!currentBatchId) return;
     setLoading(true);
     try {
-      await api.resetAttacks(activeBatchId);
+      await api.resetAttacks(currentBatchId);
       setStatusMessage({ type: "info", text: "Simulation reset to nominal operating parameters." });
     } catch (e) {
       setStatusMessage({ type: "error", text: e.message });
@@ -52,9 +70,76 @@ export default function ChaosStudio({ activeBatchId, lastPacket, onAttackInjecte
             Chaos & Security Attack Laboratory
           </h2>
         </div>
-        <p style={{ fontSize: "13px", color: "#94A3B8", marginBottom: "20px" }}>
+        <p style={{ fontSize: "13px", color: "#94A3B8", marginBottom: "16px" }}>
           Interactive adversarial testbed to evaluate cryptographic non-repudiation, EIP-191 signature validation, and autonomous digital recovery.
         </p>
+
+        {/* Target Batch Selector & Simulation State Bar */}
+        <div style={{
+          background: "var(--bg-surface-elevated)",
+          padding: "12px 16px",
+          borderRadius: "var(--radius-md)",
+          border: "1px solid var(--border-medium)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "12px",
+          marginBottom: "16px"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: "600" }}>Target Lot:</span>
+            <select
+              value={currentBatchId || ""}
+              onChange={(e) => onSelectBatch && onSelectBatch(e.target.value)}
+              className="font-mono"
+              style={{
+                background: "var(--bg-base)",
+                color: "var(--cyan-primary)",
+                border: "1px solid var(--border-medium)",
+                borderRadius: "var(--radius-sm)",
+                padding: "6px 10px",
+                fontSize: "12px",
+                outline: "none",
+                fontWeight: "600",
+                maxWidth: "260px"
+              }}
+            >
+              {batches.map((b) => (
+                <option key={b.batch_id} value={b.batch_id}>
+                  {b.product_name} ({b.batch_id.substring(0, 8)}... - {b.status})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: isSimulationRunning ? "var(--emerald-success)" : "#64748B",
+                display: "inline-block",
+                boxShadow: isSimulationRunning ? "0 0 8px var(--emerald-success)" : "none"
+              }} />
+              <span style={{ fontSize: "12px", color: isSimulationRunning ? "var(--emerald-success)" : "#94A3B8", fontWeight: "600" }}>
+                {isSimulationRunning ? "TELEMETRY ACTIVE" : "STANDBY"}
+              </span>
+            </div>
+
+            {!isSimulationRunning && onStartSimulation && currentBatchId && (
+              <button
+                className="btn btn-primary"
+                style={{ padding: "4px 10px", fontSize: "11px" }}
+                onClick={() => onStartSimulation(currentBatchId)}
+              >
+                <Play size={12} />
+                <span>Start Transit</span>
+              </button>
+            )}
+          </div>
+        </div>
 
         {statusMessage && (
           <div style={{

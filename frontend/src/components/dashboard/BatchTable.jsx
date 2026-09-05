@@ -62,13 +62,17 @@ export default function BatchTable({
                   onClick={() => onSelectBatch(batch.batch_id)}
                   style={{
                     borderBottom: "1px solid var(--border-subtle)",
-                    background: isSelected ? "var(--bg-surface-elevated)" : "transparent",
+                    background: isSelected ? "rgba(0, 240, 255, 0.08)" : "transparent",
+                    borderLeft: isSelected ? "3px solid var(--cyan-primary)" : "3px solid transparent",
                     cursor: "pointer",
-                    transition: "background 0.15s ease",
+                    transition: "all 0.15s ease",
                   }}
                 >
-                  <td className="font-mono" style={{ padding: "12px", fontSize: "12px", color: "var(--cyan-primary)" }}>
-                    {formatAddress(batch.batch_id)}
+                  <td className="font-mono" style={{ padding: "12px", fontSize: "12px", color: isSelected ? "#FFFFFF" : "var(--cyan-primary)", fontWeight: isSelected ? "700" : "500" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      {isSelected && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--cyan-primary)", display: "inline-block", boxShadow: "0 0 6px var(--cyan-primary)" }}></span>}
+                      {formatAddress(batch.batch_id)}
+                    </div>
                   </td>
                   <td style={{ padding: "12px", fontWeight: "600", color: "#FFFFFF" }}>
                     {batch.product_name}
@@ -92,6 +96,7 @@ export default function BatchTable({
                           className={`btn ${isSelected && isSimulationRunning ? "btn-secondary" : "btn-primary"}`}
                           style={{ padding: "5px 10px", fontSize: "11px" }}
                           onClick={() => {
+                            onSelectBatch(batch.batch_id);
                             if (isSelected && isSimulationRunning) {
                               onPauseSimulation(batch.batch_id);
                             } else {

@@ -41,6 +41,32 @@ async function main() {
   await registry.registerNode(auditor.address, "CDSCO Regulatory Audit Division (Auditor)", auditorRole);
   console.log(`Registered Auditor: ${auditor.address}`);
 
+  // 3b. Seed Demonstration Batches for Live Viva
+  console.log("Seeding initial demonstration pharmaceutical batches...");
+  const batch1Id = "0x1111111111111111111111111111111111111111111111111111111111111111";
+  const tx1 = await supplyChain.connect(manufacturer).createBatch(
+    batch1Id,
+    "Comirnaty mRNA COVID-19 Vaccine (2-8°C)",
+    200,
+    800
+  );
+  await tx1.wait();
+  const txHandoverInit = await supplyChain.connect(manufacturer).initiateHandover(batch1Id, carrier.address);
+  await txHandoverInit.wait();
+  const txHandoverConf = await supplyChain.connect(carrier).confirmHandover(batch1Id, manufacturer.address);
+  await txHandoverConf.wait();
+  console.log(`Seeded Active In-Transit Batch #1: ${batch1Id}`);
+
+  const batch2Id = "0x2222222222222222222222222222222222222222222222222222222222222222";
+  const tx2 = await supplyChain.connect(manufacturer).createBatch(
+    batch2Id,
+    "Covaxin Purified Inactivated Lot B-4091",
+    200,
+    800
+  );
+  await tx2.wait();
+  console.log(`Seeded Pre-Transit Created Batch #2: ${batch2Id}`);
+
   // 4. Save Deployment Addresses & ABIs for Backend Consumption
   const deploymentsDir = path.join(__dirname, "../deployments");
   if (!fs.existsSync(deploymentsDir)) {

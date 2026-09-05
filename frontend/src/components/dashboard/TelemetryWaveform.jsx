@@ -1,7 +1,9 @@
 import React from "react";
 import { Activity, Wind, AlertCircle } from "lucide-react";
 
-export default function TelemetryWaveform({ telemetryHistory, lastPacket }) {
+export default function TelemetryWaveform({ history, telemetryHistory, lastPacket, minThreshold = 2.0, maxThreshold = 8.0 }) {
+  const dataList = Array.isArray(history) ? history : (Array.isArray(telemetryHistory) ? telemetryHistory : []);
+
   // Waveform rendering bounds: Y-axis from 0°C to 15°C
   const minTempAxis = 0.0;
   const maxTempAxis = 15.0;
@@ -16,24 +18,24 @@ export default function TelemetryWaveform({ telemetryHistory, lastPacket }) {
     return height - paddingY - normalized * (height - 2 * paddingY);
   }
 
-  const ySafeMin = tempToY(2.0);
-  const ySafeMax = tempToY(8.0);
+  const ySafeMin = tempToY(minThreshold);
+  const ySafeMax = tempToY(maxThreshold);
   const safeHeight = Math.abs(ySafeMin - ySafeMax);
 
   // Generate SVG polyline points
-  const points = telemetryHistory.map((item, idx) => {
-    const x = paddingX + (idx / Math.max(1, telemetryHistory.length - 1)) * (width - 2 * paddingX);
+  const points = dataList.map((item, idx) => {
+    const x = paddingX + (idx / Math.max(1, dataList.length - 1)) * (width - 2 * paddingX);
     const y = tempToY(item.temperature_celsius);
     return `${x},${y}`;
   }).join(" ");
 
-  const latestTemp = lastPacket ? lastPacket.temperature_celsius : 4.5;
-  const latestX = telemetryHistory.length > 0
-    ? paddingX + ((telemetryHistory.length - 1) / Math.max(1, telemetryHistory.length - 1)) * (width - 2 * paddingX)
+  const latestTemp = lastPacket?.temperature_celsius ?? (dataList.length > 0 ? dataList[dataList.length - 1].temperature_celsius : 4.5);
+  const latestX = dataList.length > 0
+    ? paddingX + ((dataList.length - 1) / Math.max(1, dataList.length - 1)) * (width - 2 * paddingX)
     : paddingX;
   const latestY = tempToY(latestTemp);
 
-  const isBreach = latestTemp > 8.0 || latestTemp < 2.0;
+  const isBreach = latestTemp > maxThreshold || latestTemp < minThreshold;
 
   return (
     <div className="glass-panel" style={{ padding: "20px", marginBottom: "20px" }}>
@@ -103,7 +105,7 @@ export default function TelemetryWaveform({ telemetryHistory, lastPacket }) {
           )}
 
           {/* Pulsing Live Head Point */}
-          {telemetryHistory.length > 0 && (
+          {dataList.length > 0 && (
             <g>
               <circle
                 cx={latestX}

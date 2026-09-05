@@ -56,7 +56,10 @@ class Web3Service:
     def is_connected(self) -> bool:
         """Returns True if connected to EVM node."""
         try:
-            return self.w3.is_connected()
+            connected = bool(self.w3.is_connected())
+            if connected and not self.supply_chain_contract:
+                self._load_contracts()
+            return connected
         except Exception:
             return False
 

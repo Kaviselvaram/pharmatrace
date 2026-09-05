@@ -99,6 +99,10 @@ export default function TransitMap({ lastPacket }) {
       const lon = lastPacket.longitude || defaultLon;
       vehicleMarkerRef.current.setLatLng([lat, lon]);
 
+      if (mapInstanceRef.current && lat && lon) {
+        mapInstanceRef.current.panTo([lat, lon], { animate: true, duration: 0.8 });
+      }
+
       if (lastPacket.waypoint_label) {
         vehicleMarkerRef.current.bindPopup(`
           <div style="font-family: sans-serif; font-size: 12px; color: #111;">

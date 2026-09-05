@@ -175,6 +175,7 @@ export default function App() {
               <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "16px", marginBottom: "20px" }}>
                 <TelemetryWaveform
                   history={telemetryHistory}
+                  lastPacket={lastPacket}
                   minThreshold={2.0}
                   maxThreshold={8.0}
                 />
@@ -211,6 +212,10 @@ export default function App() {
           {activeTab === "chaos" && (
             <ChaosStudio
               activeBatchId={activeBatchId}
+              batches={batches}
+              onSelectBatch={setActiveBatchId}
+              isSimulationRunning={isSimulationRunning}
+              onStartSimulation={handleStartSimulation}
               lastPacket={lastPacket}
               onAttackInjected={(type) => {
                 showToast(`Chaos Triggered: ${type}`, "warning");

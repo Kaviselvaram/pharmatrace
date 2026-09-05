@@ -21,10 +21,46 @@ from app.api.v1.audit import router as audit_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifecycle manager: initializes SQLite database on startup."""
+    """Lifecycle manager: initializes SQLite database on startup and seeds initial demonstration lots."""
     print("=== Initializing Pharmaceutical Supply Chain Gateway ===")
     await init_db()
     print("SQLite database tables initialized.")
+
+    try:
+        from app.core.database import AsyncSessionLocal
+        from app.domain.models import BatchModel
+        from datetime import datetime, timezone
+
+        async with AsyncSessionLocal() as session:
+            batch1 = await session.get(BatchModel, "0x1111111111111111111111111111111111111111111111111111111111111111")
+            if not batch1:
+                session.add(BatchModel(
+                    batch_id="0x1111111111111111111111111111111111111111111111111111111111111111",
+                    product_name="Comirnaty mRNA COVID-19 Vaccine (2-8°C)",
+                    manufacturer_address="0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+                    current_custodian="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+                    min_temp_celsius=2.0,
+                    max_temp_celsius=8.0,
+                    status="IN_TRANSIT",
+                    created_at=datetime.now(timezone.utc)
+                ))
+            batch2 = await session.get(BatchModel, "0x2222222222222222222222222222222222222222222222222222222222222222")
+            if not batch2:
+                session.add(BatchModel(
+                    batch_id="0x2222222222222222222222222222222222222222222222222222222222222222",
+                    product_name="Covaxin Purified Inactivated Lot B-4091",
+                    manufacturer_address="0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+                    current_custodian="0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+                    min_temp_celsius=2.0,
+                    max_temp_celsius=8.0,
+                    status="CREATED",
+                    created_at=datetime.now(timezone.utc)
+                ))
+            await session.commit()
+            print("Demonstration lots verified in SQLite database.")
+    except Exception as e:
+        print(f"Notice: Batch auto-seeding skipped: {e}")
+
     yield
     print("=== Shutting down Gateway ===")
 
