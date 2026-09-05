@@ -42,7 +42,7 @@ class TelemetryModel(Base):
     is_tampered_mitm = Column(Boolean, default=False)
     on_chain_committed = Column(Boolean, default=False)
     on_chain_tx_hash = Column(String(66), nullable=True)
-    recorded_at = Column(DateTime, default=datetime.utcnow)
+    recorded_at = Column(DateTime, default=get_utc_now)
 
     __table_args__ = (
         Index("idx_batch_nonce", "batch_id", "nonce"),
@@ -58,4 +58,4 @@ class SecurityAlertModel(Base):
     severity = Column(String(20), nullable=False) # LOW, MEDIUM, HIGH, CRITICAL
     message = Column(Text, nullable=False)
     tx_hash = Column(String(66), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=get_utc_now)

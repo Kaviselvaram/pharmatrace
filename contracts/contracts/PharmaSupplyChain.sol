@@ -225,6 +225,11 @@ contract PharmaSupplyChain is ReentrancyGuard {
             b.status == BatchStatus.CREATED || b.status == BatchStatus.IN_TRANSIT,
             "PharmaSupplyChain: invalid batch status for transfer"
         );
+        require(
+            registry.isAuthorized(msg.sender, registry.CARRIER_ROLE()) ||
+            registry.isAuthorized(msg.sender, registry.HOSPITAL_ROLE()),
+            "PharmaSupplyChain: recipient is no longer an active authorized entity"
+        );
 
         // Transition state machine
         BatchStatus newStatus;
@@ -295,7 +300,12 @@ contract PharmaSupplyChain is ReentrancyGuard {
             "PharmaSupplyChain: telemetry only accepted for active in-transit batches"
         );
 
-        // 1. Recover Signer & Validate Signature Authenticity
+        // 1. Validate Coordinate and Nonce Boundaries
+        require(latitudeScaled >= -90_000_000 && latitudeScaled <= 90_000_000, "PharmaSupplyChain: latitude out of bounds [-90, 90]");
+        require(longitudeScaled >= -180_000_000 && longitudeScaled <= 180_000_000, "PharmaSupplyChain: longitude out of bounds [-180, 180]");
+        require(nonce > 0, "PharmaSupplyChain: nonce must be strictly positive");
+
+        // 2. Recover Signer & Validate Signature Authenticity
         (address recoveredSigner, ) = verifySignature(
             batchId,
             temperatureScaled,
@@ -313,14 +323,19 @@ contract PharmaSupplyChain is ReentrancyGuard {
             revert("PharmaSupplyChain: INVALID_SIGNATURE (recovered signer != custodian)");
         }
 
-        // 2. Replay Protection: Nonce must be strictly monotonic
+        require(
+            registry.isAuthorized(recoveredSigner, registry.CARRIER_ROLE()),
+            "PharmaSupplyChain: recovered signer is not an active authorized carrier"
+        );
+
+        // 3. Replay Protection: Nonce must be strictly monotonic
         require(
             nonce > lastNonce[batchId][recoveredSigner],
             "PharmaSupplyChain: REPLAY_ATTACK_DETECTED (nonce must strictly increment)"
         );
         lastNonce[batchId][recoveredSigner] = nonce;
 
-        // 3. Timestamp Clock-Drift Validation (within 5 minutes in past, 60s in future)
+        // 4. Timestamp Clock-Drift Validation (within 1 hour in past, 60s in future)
         require(timestamp <= block.timestamp + 60, "PharmaSupplyChain: future timestamp not allowed");
         require(timestamp >= block.timestamp - 3600, "PharmaSupplyChain: timestamp too stale");
 
@@ -370,7 +385,9 @@ contract PharmaSupplyChain is ReentrancyGuard {
         Batch storage orig = _batches[originalBatchId];
         require(orig.createdAt > 0, "PharmaSupplyChain: original batch does not exist");
         require(orig.status == BatchStatus.QUARANTINED, "PharmaSupplyChain: batch is not quarantined");
+        require(orig.manufacturer == msg.sender, "PharmaSupplyChain: only original manufacturer can link replacement");
         require(_batches[replacementBatchId].createdAt > 0, "PharmaSupplyChain: replacement batch does not exist");
+        require(_batches[replacementBatchId].manufacturer == msg.sender, "PharmaSupplyChain: replacement must belong to same manufacturer");
 
         orig.status = BatchStatus.REPLENISHED;
         orig.replacementBatchId = replacementBatchId;
