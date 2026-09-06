@@ -256,7 +256,7 @@ export default function ChaosStudio({
           <div style={{ color: "#94A3B8" }}>Reported Temp: <span style={{ color: lastPacket?.is_tampered_mitm ? "var(--crimson-alert)" : "#FFFFFF" }}>{lastPacket?.temperature_celsius ?? "..."}°C</span></div>
           {lastPacket?.is_tampered_mitm && (
             <div style={{ color: "var(--crimson-alert)", fontWeight: "700" }}>
-              [MITM ALERT]: Sensor recorded {lastPacket.raw_sensor_temperature}°C, but packet was edited to {lastPacket.temperature_celsius}°C!
+              [MITM ALERT]: Sensor recorded {lastPacket.raw_sensor_temperature != null ? `${lastPacket.raw_sensor_temperature}°C` : "nominal temperature"}, but payload was altered to {lastPacket.temperature_celsius}°C!
             </div>
           )}
           <div style={{ color: "#94A3B8" }}>GPS Coordinates: {lastPacket?.latitude?.toFixed(4)}, {lastPacket?.longitude?.toFixed(4)}</div>

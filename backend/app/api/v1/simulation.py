@@ -123,6 +123,7 @@ async def simulation_loop(batch_id: str):
                     "compressor_active": packet["compressor_active"],
                     "attack_mode": packet["attack_mode"],
                     "is_tampered_mitm": packet["is_tampered_mitm"],
+                    "raw_sensor_temperature": packet.get("raw_sensor_temperature"),
                     "on_chain_committed": on_chain_success,
                     "tx_hash": tx_hash,
                     "error": error_msg
