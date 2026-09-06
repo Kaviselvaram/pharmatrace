@@ -15,24 +15,22 @@ Open 3 terminal tabs in the project root `/Users/kaviselvaramkathirvel/Infosecpr
 #### Terminal 1: Local EVM Node & Contract Deployment
 ```bash
 cd contracts
-npx hardhat node --hostname 0.0.0.0 --port 8545
+npm run node
 ```
 *(In a separate one-off command once the node is up, deploy the contracts)*:
 ```bash
-node contracts/scripts/deploy.js
+npm run deploy:local
 ```
 
 #### Terminal 2: FastAPI Backend & Physics Engine
 ```bash
 source .venv/bin/activate
-cd backend
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+PYTHONPATH=backend uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 #### Terminal 3: React 19 Frontend Dashboard
 ```bash
-cd frontend
-npm run dev -- --port 5174
+npm --prefix frontend run dev
 ```
 
 Then open your browser at:

@@ -16,7 +16,31 @@ import { useWebSocket } from "./hooks/useWebSocket";
 import { api } from "./services/api";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const getInitialTab = () => {
+    const hash = window.location.hash.replace("#", "");
+    const validTabs = ["dashboard", "map", "chaos", "explorer", "verify", "auditor"];
+    return validTabs.includes(hash) ? hash : "dashboard";
+  };
+
+  const [activeTab, setActiveTabState] = useState(getInitialTab);
+
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    window.location.hash = tab;
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace("#", "");
+      const validTabs = ["dashboard", "map", "chaos", "explorer", "verify", "auditor"];
+      if (validTabs.includes(hash)) {
+        setActiveTabState(hash);
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
   const [activeRole, setActiveRole] = useState("MANUFACTURER");
   const [batches, setBatches] = useState([]);
   const [activeBatchId, setActiveBatchId] = useState("");
@@ -203,7 +227,7 @@ export default function App() {
                   Interstate Cold-Chain Route Telemetry Log
                 </h3>
                 <p style={{ fontSize: "12px", color: "#94A3B8" }}>
-                  Active Highway Corridor: NH44 (Hyderabad Pharma City $\rightarrow$ Bangalore Hub $\rightarrow$ Chennai Apollo Specialty Hospital). Every GPS coordinate packet is digitally signed on an edge virtualized reefer node.
+                  Active Highway Corridor: NH44 (Hyderabad Pharma City → Bangalore Hub → Chennai Apollo Specialty Hospital). Every GPS coordinate packet is digitally signed on an edge virtualized reefer node.
                 </p>
               </div>
             </div>

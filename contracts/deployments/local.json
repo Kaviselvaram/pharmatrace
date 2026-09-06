@@ -1,7 +1,7 @@
 {
   "network": "localhost",
   "chainId": 31337,
-  "deployedAt": "2026-09-06T04:46:50.524Z",
+  "deployedAt": "2026-09-06T14:42:47.794Z",
   "contracts": {
     "SupplyChainRegistry": {
       "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",

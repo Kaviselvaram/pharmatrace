@@ -233,5 +233,32 @@ class Web3Service:
         except Exception:
             return None
 
+    def link_replacement_batch_on_chain(
+        self,
+        quarantined_batch_id_hex: str,
+        replacement_batch_id_hex: str,
+        mfg_private_key: str
+    ) -> str:
+        """Links an expedited replacement batch to a quarantined lot on-chain."""
+        clean_orig_id = bytes.fromhex(quarantined_batch_id_hex.replace("0x", ""))
+        clean_rep_id = bytes.fromhex(replacement_batch_id_hex.replace("0x", ""))
+        mfg_acct = Account.from_key(mfg_private_key)
+        nonce = self.w3.eth.get_transaction_count(mfg_acct.address)
+
+        tx = self.supply_chain_contract.functions.linkReplacementBatch(
+            clean_orig_id,
+            clean_rep_id
+        ).build_transaction({
+            "from": mfg_acct.address,
+            "nonce": nonce,
+            "gas": 200000,
+            "gasPrice": self.w3.eth.gas_price
+        })
+
+        signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=mfg_private_key)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=10)
+        return receipt.transactionHash.hex()
+
 
 web3_service = Web3Service()

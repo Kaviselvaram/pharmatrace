@@ -171,3 +171,52 @@ async def get_batch_detail(batch_id: str, db: AsyncSession = Depends(get_db)):
             for t in telemetry_records
         ]
     }
+
+
+@router.post("/{batch_id}/link-replacement")
+async def link_replacement(
+    batch_id: str,
+    payload: dict,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Links an expedited replacement batch to a quarantined lot on-chain and in DB.
+    """
+    replacement_batch_id = payload.get("replacement_batch_id")
+    if not replacement_batch_id:
+        raise HTTPException(status_code=400, detail="replacement_batch_id is required")
+
+    batch = await db.get(BatchModel, batch_id)
+    if not batch:
+        raise HTTPException(status_code=404, detail="Original batch not found")
+
+    tx_hash = None
+    if web3_service.is_connected() and web3_service.supply_chain_contract:
+        try:
+            tx_hash = web3_service.link_replacement_batch_on_chain(
+                quarantined_batch_id_hex=batch_id,
+                replacement_batch_id_hex=replacement_batch_id,
+                mfg_private_key=DEFAULT_MFG_KEY
+            )
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"On-chain link failed: {str(e)}")
+
+    batch.replacement_batch_id = replacement_batch_id
+    batch.status = "REPLENISHED"
+    await db.commit()
+
+    await ws_manager.broadcast({
+        "type": "BATCH_REPLENISHED",
+        "data": {
+            "batch_id": batch_id,
+            "replacement_batch_id": replacement_batch_id,
+            "tx_hash": tx_hash
+        }
+    })
+
+    return {
+        "status": "REPLENISHED",
+        "batch_id": batch_id,
+        "replacement_batch_id": replacement_batch_id,
+        "tx_hash": tx_hash
+    }

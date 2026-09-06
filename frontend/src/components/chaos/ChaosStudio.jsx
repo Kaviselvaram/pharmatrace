@@ -176,7 +176,7 @@ export default function ChaosStudio({
               </button>
             </div>
             <p style={{ fontSize: "12px", color: "#94A3B8" }}>
-              Simulates an adversary modifying temperature (12.5°C $\rightarrow$ 4.2°C) without the private key. Proves that Solidity <code>ecrecover</code> detects the hash divergence and reverts transaction.
+              Simulates an adversary modifying temperature (12.5°C → 4.2°C) without the private key. Proves that Solidity <code>ecrecover</code> detects the hash divergence and reverts transaction.
             </p>
           </div>
 
