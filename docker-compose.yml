@@ -7,12 +7,13 @@ services:
       - ./contracts:/app
     ports:
       - "8546:8545"
-    command: sh -c "npm install && npx hardhat node --hostname 0.0.0.0"
+    command: sh -c "npx hardhat node --hostname 0.0.0.0"
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "8545"]
-      interval: 5s
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8545"]
+      interval: 3s
       timeout: 3s
-      retries: 5
+      start_period: 10s
+      retries: 10
     networks:
       - infosecproj_net
 

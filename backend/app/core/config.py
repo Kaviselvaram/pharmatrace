@@ -14,10 +14,10 @@ class Settings(BaseSettings):
 
     # Port and host settings (Default container port 8000 -> Host port 8001)
     HOST: str = "0.0.0.0"
-    PORT: int = int(os.getenv("PORT", "8000"))
+    PORT: int = int(os.getenv("PORT", "8001"))
 
-    # Local EVM RPC URL (Default localhost:8545, Docker: http://blockchain:8545)
-    RPC_URL: str = os.getenv("RPC_URL", "http://127.0.0.1:8545")
+    # Local EVM RPC URL (Default localhost:8546, Docker: http://blockchain:8545)
+    RPC_URL: str = os.getenv("RPC_URL", "http://127.0.0.1:8546")
 
     # Local SQLite database path (ensures zero collision with other Docker projects)
     DB_URL: str = os.getenv("DB_URL", "sqlite+aiosqlite:///./data/infosecproj.db")
