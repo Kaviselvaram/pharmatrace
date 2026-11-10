@@ -12,6 +12,10 @@ import json
 import urllib.request
 import urllib.error
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if os.path.join(ROOT_DIR, "backend") not in sys.path:
+    sys.path.insert(0, os.path.join(ROOT_DIR, "backend"))
+
 BASE_URL = "http://127.0.0.1:8001"
 RPC_URL = "http://127.0.0.1:8546"
 
@@ -115,7 +119,7 @@ def main():
     temp_nominal = 4.5
     lat = 13.0827
     lon = 80.2707
-    ts = int(time.time())
+    ts = web3_service.get_current_chain_time()
     nonce = 1
 
     sig_dict = sign_telemetry_payload(carrier_key, unique_lot_id, temp_nominal, lat, lon, ts, nonce)
@@ -173,28 +177,18 @@ def main():
     assert "INVALID_SIGNATURE" in mitm_err or "execution reverted" in mitm_err or "UnauthorizedSigner" in mitm_err
     print(f"   ✔ MITM attack correctly rejected by smart contract! Reason: {mitm_err}")
 
-    # Step 10b: Replay Attack — Submitting old nonce
-    print("\n[Step 10b] Testing Replay Attack (Submitting old nonce = 1)...")
-    replay_packet = {
-        "batch_id": unique_lot_id,
-        "temperature_celsius": 4.5,
-        "temperature_scaled": 450,
-        "latitude": lat,
-        "longitude": lon,
-        "latitude_scaled": int(lat * 1_000_000),
-        "longitude_scaled": int(lon * 1_000_000),
-        "timestamp": ts + 5,
-        "nonce": 1, # Replay old nonce!
-        "raw_hash": sig_dict["raw_hash"],
-        "v": sig_dict["v"],
-        "r": sig_dict["r"],
-        "s": sig_dict["s"],
-        "custodian_address": carrier_address,
-        "is_tampered_mitm": False
-    }
+    # Step 10b: True Replay Attack — Submitting exact same valid packet again
+    print("\n[Step 10b] Testing True Replay Attack (Submitting exact same valid signed packet again, nonce = 1)...")
+    # A genuine replay attack submits the EXACT SAME payload, timestamp, nonce, and signature
+    # No fields modified, no re-signing.
+    replay_packet = packet.copy()
     replay_success, replay_err = web3_service.submit_signed_telemetry_on_chain(replay_packet, carrier_key)
-    assert not replay_success, "Replay attack should have been REJECTED by smart contract!"
-    print(f"   ✔ Replay attack correctly rejected! Nonce monotonic check enforced: {replay_err}")
+    assert not replay_success, "True Replay attack should have been REJECTED by smart contract!"
+    assert "REPLAY_ATTACK_DETECTED" in replay_err, (
+        f"Expected contract to revert with REPLAY_ATTACK_DETECTED, but got: {replay_err}"
+    )
+    print("   ✔ True Replay attack correctly rejected! Nonce monotonic check enforced on-chain:")
+    print("      Revert reason: PharmaSupplyChain: REPLAY_ATTACK_DETECTED (nonce must strictly increment)")
 
     # Step 11-14: Thermal Excursion, Authentic Signature Accepted, Batch Quarantined
     print("\n[Step 11-14] Testing Authentic Thermal Excursion (11.80°C > 8.00°C threshold)...")

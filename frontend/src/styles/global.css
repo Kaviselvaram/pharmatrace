@@ -1,5 +1,6 @@
 @import './tokens.css';
 
+/* Universal Reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -9,176 +10,562 @@
 html, body {
   width: 100%;
   min-height: 100vh;
-  background-color: var(--bg-canvas);
-  color: #E2E8F0;
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* Custom Scrollbars */
+/* Accessibility Focus */
+:focus-visible {
+  outline: 2px solid var(--dash-blue-accent);
+  outline-offset: 2px;
+}
+
+/* Custom Minimal Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-canvas);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-surface-elevated);
+  background: #27272E;
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cyan-primary);
+  background: #3F3F4A;
 }
 
-/* Base Utility Classes */
-.font-mono {
-  font-family: var(--font-mono);
-}
+/* Typography Helpers */
+.font-sans { font-family: var(--font-sans); }
+.font-display { font-family: var(--font-display); }
+.font-mono { font-family: var(--font-mono); }
 
-.font-display {
-  font-family: var(--font-display);
-}
+/* ==========================================================================
+   REFERENCE 2: OPERATIONAL DASHBOARD STYLES
+   ========================================================================== */
 
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border-subtle);
+/* Dashboard Card */
+.dash-card {
+  background: var(--dash-surface);
+  border: 1px solid var(--dash-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  transition: border-color 0.18s ease, transform 0.18s ease;
 }
 
-.glass-panel:hover {
-  border-color: var(--border-medium);
+.dash-card:hover {
+  border-color: var(--dash-border-hover);
 }
 
-/* Status Badges */
-.badge {
+/* Circular Arrow Action Button (From Reference 2) */
+.circle-arrow-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #24252B;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.circle-arrow-btn:hover {
+  background: #32333B;
+  transform: scale(1.05);
+}
+
+.circle-arrow-btn.primary {
+  background: var(--dash-blue-circle);
+  color: #FFFFFF;
+}
+
+.circle-arrow-btn.primary:hover {
+  background: #1F55E8;
+}
+
+.circle-arrow-btn.white {
+  background: #FFFFFF;
+  color: #0C0D11;
+}
+
+.circle-arrow-btn.white:hover {
+  background: #E5E7EB;
+}
+
+/* Metric Percentage Change Pill (From Reference 2) */
+.dash-change-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.dash-change-pill.positive {
+  background: var(--dash-green-pill-bg);
+  color: var(--dash-green-pill-text);
+}
+
+.dash-change-pill.negative {
+  background: var(--dash-red-pill-bg);
+  color: var(--dash-red-pill-text);
+}
+
+/* Reference 2 Order Category Pill Card (Top of Order list) */
+.dash-cat-card {
+  background: var(--dash-surface);
+  border: 1px solid var(--dash-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-cat-header {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0C0D11;
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+
+.dash-cat-header.blue { background: var(--dash-cat-blue-bg); }
+.dash-cat-header.peach { background: var(--dash-cat-peach-bg); }
+.dash-cat-header.yellow { background: var(--dash-cat-yellow-bg); }
+.dash-cat-header.green { background: var(--dash-cat-green-bg); }
+
+.dash-cat-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Reference 2 Table Status Badges */
+.dash-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.1px;
+}
+
+.dash-status-badge.in-transit,
+.dash-status-badge.on-way {
+  background: var(--dash-status-transit-bg);
+  color: var(--dash-status-transit-text);
+}
+
+.dash-status-badge.delivered {
+  background: var(--dash-status-delivered-bg);
+  color: var(--dash-status-delivered-text);
+}
+
+.dash-status-badge.quarantined,
+.dash-status-badge.await {
+  background: var(--dash-status-await-bg);
+  color: var(--dash-status-await-text);
+}
+
+.dash-status-badge.created {
+  background: var(--dash-status-created-bg);
+  color: var(--dash-status-created-text);
+}
+
+.dash-status-badge.replenished {
+  background: var(--dash-status-replenished-bg);
+  color: var(--dash-status-replenished-text);
+}
+
+/* Reference 2 Filter Tags */
+.dash-filter-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 5px 10px;
+  background: #202127;
+  color: #F4F4F6;
   border-radius: var(--radius-full);
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dash-filter-pill button {
+  background: none;
+  border: none;
+  color: #A1A1AA;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.dash-filter-pill button:hover {
+  color: #FFFFFF;
+}
+
+/* Reference 2 Control Bar Buttons */
+.dash-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  border: 1px solid var(--dash-border);
+  background: #1F2026;
+  color: #F4F4F6;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.badge-created {
-  background: var(--purple-dim);
-  color: #D8B4FE;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+.dash-pill-btn:hover {
+  background: #2A2B33;
+  border-color: #383944;
 }
 
-.badge-transit {
-  background: var(--cyan-dim);
-  color: var(--cyan-primary);
-  border: 1px solid rgba(0, 240, 255, 0.4);
+.dash-pill-btn.white-action {
+  background: #FFFFFF;
+  color: #0C0D11;
+  border-color: #FFFFFF;
 }
 
-.badge-delivered {
-  background: var(--emerald-dim);
-  color: var(--emerald-success);
-  border: 1px solid rgba(0, 255, 136, 0.3);
+.dash-pill-btn.white-action:hover {
+  background: #E5E7EB;
 }
 
-.badge-quarantined {
-  background: var(--crimson-dim);
-  color: var(--crimson-alert);
-  border: 1px solid rgba(255, 0, 85, 0.5);
-  animation: pulse-border 1.5s infinite;
+.dash-pill-btn.blue-action {
+  background: var(--dash-blue-accent);
+  color: #FFFFFF;
+  border-color: var(--dash-blue-accent);
 }
 
-.badge-replenished {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60A5FA;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+.dash-pill-btn.blue-action:hover {
+  background: #3B70F0;
 }
 
-/* Buttons */
-.btn {
+/* Dark Input & Search Control */
+.dash-search-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #18191E;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  color: #F4F4F6;
+}
+
+.dash-search-input input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #F4F4F6;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  width: 100%;
+}
+
+.dash-search-input input::placeholder {
+  color: #71717A;
+}
+
+/* Reference 2 Checkbox */
+.dash-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #3F3F4A;
+  background: #1E1F24;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  transition: all 0.12s ease;
+}
+
+.dash-checkbox.checked {
+  background: var(--dash-blue-accent);
+  border-color: var(--dash-blue-accent);
+}
+
+/* ==========================================================================
+   REFERENCE 1: PUBLIC PORTAL STYLES
+   ========================================================================== */
+.portal-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--portal-pill-bg);
+  border: 1px solid var(--portal-pill-border);
+  color: var(--portal-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.portal-black-pill-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  background: #111827;
+  color: #FFFFFF;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  text-decoration: none;
   border: none;
-  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.btn-primary {
-  background: var(--cyan-primary);
-  color: #07090E;
+.portal-black-pill-btn:hover {
+  background: #000000;
+  transform: translateY(-1px);
 }
 
-.btn-primary:hover {
-  box-shadow: var(--cyan-glow);
-  filter: brightness(1.1);
+.portal-white-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: var(--radius-full);
+  background: #FFFFFF;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.btn-danger {
-  background: var(--crimson-alert);
+.portal-white-pill-btn:hover {
+  background: #F3F4F6;
+  transform: translateY(-1px);
+}
+
+/* Segmented Hero Pill Bar */
+.hero-docked-bar {
+  display: flex;
+  align-items: center;
+  background: rgba(30, 26, 22, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.hero-dock-segment {
+  flex: 1;
+  padding: 10px 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.hero-dock-segment:last-of-type {
+  border-right: none;
+}
+
+.hero-dock-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.hero-dock-value {
+  font-size: 12px;
+  font-weight: 600;
   color: #FFFFFF;
+  white-space: nowrap;
 }
 
-.btn-danger:hover {
-  box-shadow: var(--crimson-glow);
-  filter: brightness(1.1);
+/* Interactive Dotted Target / Milestone Indicator (From Reference 1) */
+.portal-target-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
 }
 
-.btn-secondary {
-  background: var(--bg-surface-elevated);
-  color: #CBD5E1;
-  border: 1px solid var(--border-subtle);
-}
-
-.btn-secondary:hover {
-  background: var(--bg-surface-hover);
-  border-color: var(--border-medium);
-  color: #FFFFFF;
-}
-
-/* Animations */
-@keyframes beacon-pulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 240, 255, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 240, 255, 0); }
-}
-
-@keyframes pulse-border {
-  0%, 100% { border-color: rgba(255, 0, 85, 0.4); }
-  50% { border-color: rgba(255, 0, 85, 1); }
-}
-
-.beacon-dot {
-  width: 8px;
-  height: 8px;
+.portal-target-line .dot-start {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--cyan-primary);
-  animation: beacon-pulse 2s infinite;
+  background: #60A5FA;
 }
 
-/* Cyber-Clinical Dark Map Tiles using standard OpenStreetMap (Zero-Cost, Zero-Watermark) */
-.dark-tiles .leaflet-tile {
-  filter: brightness(0.55) invert(1) contrast(2.5) hue-rotate(200deg) saturate(0.25) brightness(0.75);
+.portal-target-line .dash-track {
+  width: 90px;
+  border-top: 2px dashed #93C5FD;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
+.portal-target-line .target-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #2563EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.portal-target-line .target-icon::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2563EB;
+}
+
+/* Modern Card with Smooth Rounded Corners */
+.portal-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portal-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   TOASTS & MODALS
+   ========================================================================== */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 13px;
+  box-shadow: var(--shadow-obsidian-lg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 440px;
+  border: 1px solid var(--dash-border);
+  background: #1B1C22;
+  color: #F4F4F6;
+  animation: toastIn 0.2s ease-out;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-item.toast-success { border-color: rgba(52, 211, 153, 0.4); }
+.toast-item.toast-warning { border-color: rgba(245, 158, 11, 0.4); }
+.toast-item.toast-error { border-color: rgba(239, 68, 68, 0.4); }
+
+/* Modal Backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: var(--z-modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-dialog {
+  background: var(--dash-surface);
+  border: 1px solid var(--dash-border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 580px;
+  z-index: var(--z-modal);
+  box-shadow: var(--shadow-obsidian-lg);
+  overflow: hidden;
+  animation: modalScale 0.2s ease-out;
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Leaflet Map Dark Invert */
+.dark-map-tiles {
+  filter: invert(100%) hue-rotate(180deg) brightness(88%) contrast(92%);
+}
+
+.leaflet-container {
+  background: #0C0D11 !important;
+  font-family: inherit !important;
+}
+
+.leaflet-control-zoom a {
+  background-color: #18191E !important;
+  color: #FFFFFF !important;
+  border-color: var(--dash-border) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #23252C !important;
+  color: var(--dash-blue-accent) !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(12, 13, 17, 0.88) !important;
+  color: #9CA3AF !important;
+  font-size: 10px !important;
+  padding: 3px 8px !important;
+  border-radius: 4px 0 0 0 !important;
+  border-top: 1px solid var(--dash-border) !important;
+  border-left: 1px solid var(--dash-border) !important;
+}
+
+.leaflet-control-attribution a {
+  color: #60A5FA !important;
+  text-decoration: underline !important;
 }

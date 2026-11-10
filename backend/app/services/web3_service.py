@@ -54,11 +54,23 @@ class Web3Service:
                 )
 
     def is_connected(self) -> bool:
-        """Returns True if connected to EVM node."""
+        """Returns True if connected to EVM node and ensures contracts are loaded."""
         try:
             connected = bool(self.w3.is_connected())
-            if connected and not self.supply_chain_contract:
-                self._load_contracts()
+            if connected:
+                # Check if contracts need loading or reloading
+                deployments_path = os.path.abspath(settings.DEPLOYMENTS_FILE)
+                if not os.path.exists(deployments_path):
+                    alt_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../contracts/deployments/local.json"))
+                    if os.path.exists(alt_path):
+                        deployments_path = alt_path
+                if os.path.exists(deployments_path):
+                    with open(deployments_path, "r") as f:
+                        meta = json.load(f)
+                    new_addr = meta.get("contracts", {}).get("PharmaSupplyChain", {}).get("address")
+                    curr_addr = self.supply_chain_contract.address if self.supply_chain_contract else None
+                    if not self.supply_chain_contract or (new_addr and curr_addr and new_addr.lower() != curr_addr.lower()):
+                        self._load_contracts()
             return connected
         except Exception:
             return False
@@ -76,6 +88,14 @@ class Web3Service:
             return self.w3.eth.chain_id
         except Exception:
             return 31337
+
+    def get_current_chain_time(self) -> int:
+        """Returns current EVM latest block timestamp, or system time if unavailable."""
+        try:
+            return self.w3.eth.get_block("latest").timestamp
+        except Exception:
+            import time
+            return int(time.time())
 
     def create_batch_on_chain(
         self,
@@ -214,10 +234,23 @@ class Web3Service:
         if not self.supply_chain_contract:
             return None
 
-        clean_batch_id = bytes.fromhex(batch_id_hex.replace("0x", ""))
         try:
+            raw_hex = batch_id_hex.strip().lower()
+            if raw_hex.startswith("0x"):
+                raw_hex = raw_hex[2:]
+            if len(raw_hex) < 64:
+                raw_hex = raw_hex.zfill(64)
+            elif len(raw_hex) > 64:
+                raw_hex = raw_hex[:64]
+            clean_batch_id = bytes.fromhex(raw_hex)
+
             data = self.supply_chain_contract.functions.getBatch(clean_batch_id).call()
+            # If batch does not exist, data[6] (createdAt) is 0
+            if not data or data[6] == 0:
+                return None
+
             status_map = ["CREATED", "IN_TRANSIT", "DELIVERED", "QUARANTINED", "REPLENISHED"]
+            status_idx = data[7] if 0 <= data[7] < len(status_map) else 0
             return {
                 "batch_id": "0x" + data[0].hex(),
                 "product_name": data[1],
@@ -226,10 +259,129 @@ class Web3Service:
                 "min_temp_celsius": data[4] / 100.0,
                 "max_temp_celsius": data[5] / 100.0,
                 "created_at_epoch": data[6],
-                "status": status_map[data[7]],
+                "status": status_map[status_idx],
                 "replacement_batch_id": "0x" + data[8].hex() if data[8] != b'\x00'*32 else None,
                 "telemetry_commit_count": data[9]
             }
+        except Exception:
+            return None
+
+    def find_batch_by_tx_hash(self, tx_hash_hex: str) -> Optional[str]:
+        """Resolves a pharmaceutical batch ID from EVM transaction receipt logs or calldata."""
+        try:
+            if not self.is_connected():
+                return None
+            clean_tx = tx_hash_hex.strip()
+            if not clean_tx.startswith("0x"):
+                clean_tx = f"0x{clean_tx}"
+
+            receipt = None
+            try:
+                receipt = self.w3.eth.get_transaction_receipt(clean_tx)
+            except Exception:
+                receipt = None
+
+            # Handle failed / reverted transactions
+            if receipt and receipt.status == 0:
+                return "FAILED_TX"
+
+            # Check if receipt target contract matches supply chain
+            if receipt and receipt.to and self.supply_chain_contract:
+                if receipt.to.lower() != self.supply_chain_contract.address.lower():
+                    return "WRONG_CONTRACT_TX"
+
+            # 1. Inspect transaction receipt logs
+            if receipt and receipt.logs:
+                for log in receipt.logs:
+                    for topic in log.topics[1:]:
+                        topic_hex = topic.hex() if hasattr(topic, "hex") else str(topic)
+                        candidate = "0x" + topic_hex if not topic_hex.startswith("0x") else topic_hex
+                        batch_info = self.get_batch_from_chain(candidate)
+                        if batch_info:
+                            return batch_info["batch_id"]
+
+            # 2. Inspect transaction calldata
+            try:
+                tx = self.w3.eth.get_transaction(clean_tx)
+                if tx and tx.input:
+                    # Try ABI function decoding if sent to supply chain contract
+                    if tx.to and self.supply_chain_contract and tx.to.lower() == self.supply_chain_contract.address.lower():
+                        try:
+                            func, params = self.supply_chain_contract.decode_function_input(tx.input)
+                            for key in ["batchId", "originalBatchId", "quarantinedBatchId", "replacementBatchId", "suggestedReplacementId"]:
+                                if key in params:
+                                    val = params[key]
+                                    hex_str = "0x" + (val.hex() if isinstance(val, (bytes, bytearray)) else str(val).replace("0x", ""))
+                                    batch_info = self.get_batch_from_chain(hex_str)
+                                    if batch_info:
+                                        return batch_info["batch_id"]
+                        except Exception:
+                            pass
+
+                    # Direct scan of input bytes for any 32-byte chunk matching a registered batch
+                    raw_input = tx.input.hex() if hasattr(tx.input, "hex") else str(tx.input)
+                    raw_clean = raw_input.replace("0x", "")
+                    for i in range(8, len(raw_clean) - 63, 64):
+                        chunk = "0x" + raw_clean[i:i + 64]
+                        batch_info = self.get_batch_from_chain(chunk)
+                        if batch_info:
+                            return batch_info["batch_id"]
+            except Exception:
+                pass
+
+            if receipt:
+                return "UNRELATED_TX"
+
+            return None
+        except Exception:
+            return None
+
+    def find_batch_by_block(self, block_identifier: Any) -> Optional[str]:
+        """Resolves pharmaceutical batch ID(s) from transactions in an EVM block hash or number."""
+        try:
+            if not self.is_connected():
+                return None
+            target = block_identifier
+            if isinstance(target, str):
+                target = target.strip()
+                if target.startswith("0x") and len(target) == 66:
+                    target = target
+                elif len(target) == 64 and all(c in "0123456789abcdefABCDEF" for c in target):
+                    target = f"0x{target}"
+                elif target.startswith("0x") and target[2:].isdigit():
+                    target = int(target[2:], 10)
+                elif target.isdigit():
+                    target = int(target)
+
+            block = None
+            try:
+                block = self.w3.eth.get_block(target, full_transactions=True)
+            except Exception:
+                if isinstance(target, str) and target.startswith("0x"):
+                    try:
+                        target_int = int(target, 16)
+                        block = self.w3.eth.get_block(target_int, full_transactions=True)
+                    except Exception:
+                        pass
+
+            if not block:
+                return None
+
+            candidate_batches = set()
+            if block.transactions:
+                for tx in block.transactions:
+                    tx_hash = tx.hash.hex() if hasattr(tx.hash, "hex") else str(tx.hash)
+                    batch_id = self.find_batch_by_tx_hash(tx_hash)
+                    if batch_id and batch_id not in ["UNRELATED_TX", "FAILED_TX", "WRONG_CONTRACT_TX"]:
+                        candidate_batches.add(batch_id)
+
+            if len(candidate_batches) > 1:
+                return "AMBIGUOUS:" + ",".join(sorted(candidate_batches))
+            elif len(candidate_batches) == 1:
+                return next(iter(candidate_batches))
+
+            # Block exists on EVM, but has no transactions associated with any registered batch
+            return "UNRELATED_BLOCK"
         except Exception:
             return None
 

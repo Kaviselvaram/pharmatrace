@@ -42,7 +42,7 @@ async def simulation_loop(batch_id: str):
     while sim_data.get("running", False):
         try:
             # 1. Advance simulation step
-            current_time = int(time.time())
+            current_time = web3_service.get_current_chain_time() if web3_service.is_connected() else int(time.time())
             packet = simulator.step(delta_t=2.0, current_time=current_time)
 
             on_chain_success = False
@@ -91,6 +91,21 @@ async def simulation_loop(batch_id: str):
                         message=f"Cryptographic Signature Mismatch: Sensor claimed {packet.get('raw_sensor_temperature')}°C, payload altered to {packet['temperature_celsius']}°C"
                     )
                     session.add(alert)
+                    await ws_manager.broadcast({
+                        "type": "MITM_TAMPER_ATTACK",
+                        "data": {
+                            "batch_id": batch_id,
+                            "error": str(error_msg)
+                        }
+                    })
+                elif not on_chain_success and "REPLAY_ATTACK_DETECTED" in str(error_msg):
+                    alert = SecurityAlertModel(
+                        batch_id=batch_id,
+                        alert_type="REPLAY_ATTACK",
+                        severity="HIGH",
+                        message=f"Monotonic Replay Attack Detected: Nonce {packet.get('nonce')} already consumed on-chain."
+                    )
+                    session.add(alert)
                 elif packet["temperature_celsius"] > 8.0 or packet["temperature_celsius"] < 2.0:
                     alert = SecurityAlertModel(
                         batch_id=batch_id,
@@ -100,6 +115,18 @@ async def simulation_loop(batch_id: str):
                         tx_hash=tx_hash
                     )
                     session.add(alert)
+                    batch_record = await session.get(BatchModel, batch_id)
+                    if batch_record:
+                        batch_record.status = "QUARANTINED"
+                    await ws_manager.broadcast({
+                        "type": "COLD_CHAIN_EXCURSION",
+                        "data": {
+                            "batch_id": batch_id,
+                            "status": "QUARANTINED",
+                            "temperature": packet["temperature_celsius"],
+                            "tx_hash": tx_hash
+                        }
+                    })
 
                 await session.commit()
 
@@ -178,6 +205,19 @@ async def pause_simulation(batch_id: str):
     return {"status": "PAUSED", "batch_id": batch_id}
 
 
+ATTACK_ALIAS_MAP = {
+    "MITM_ALTERATION": AttackType.MITM_ALTERATION,
+    "MITM_TAMPER": AttackType.MITM_ALTERATION,
+    "COMPRESSOR_FAILURE": AttackType.COMPRESSOR_FAILURE,
+    "HEAT_BREACH": AttackType.COMPRESSOR_FAILURE,
+    "FREEZING_EVENT": AttackType.FREEZING_EVENT,
+    "FREEZE_BREACH": AttackType.FREEZING_EVENT,
+    "REPLAY_ATTACK": AttackType.REPLAY_ATTACK,
+    "GEOFENCE_DEVIATION": AttackType.GEOFENCE_DEVIATION,
+    "NONE": AttackType.NONE,
+}
+
+
 @router.post("/attack")
 async def inject_attack(payload: AttackInjectionRequest):
     """Injects a physical failure or security attack into the simulation session."""
@@ -187,10 +227,14 @@ async def inject_attack(payload: AttackInjectionRequest):
 
     simulator: TransitSimulator = sim_data["simulator"]
 
-    try:
-        attack_enum = AttackType(payload.attack_type)
-    except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid attack type: {payload.attack_type}")
+    attack_key = str(payload.attack_type).strip().upper()
+    if attack_key in ATTACK_ALIAS_MAP:
+        attack_enum = ATTACK_ALIAS_MAP[attack_key]
+    else:
+        try:
+            attack_enum = AttackType(payload.attack_type)
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid attack type: {payload.attack_type}")
 
     simulator.inject_attack(attack_enum, tamper_delta=payload.tamper_delta or -8.0)
 
@@ -199,7 +243,7 @@ async def inject_attack(payload: AttackInjectionRequest):
         "type": "CHAOS_ATTACK_TRIGGERED",
         "data": {
             "batch_id": payload.batch_id,
-            "attack_type": payload.attack_type,
+            "attack_type": attack_enum.value,
             "tamper_delta": payload.tamper_delta
         }
     })
@@ -207,7 +251,7 @@ async def inject_attack(payload: AttackInjectionRequest):
     return {
         "status": "ATTACK_INJECTED",
         "batch_id": payload.batch_id,
-        "attack_type": payload.attack_type
+        "attack_type": attack_enum.value
     }
 
 

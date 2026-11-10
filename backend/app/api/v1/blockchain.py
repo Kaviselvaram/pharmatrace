@@ -46,21 +46,37 @@ async def get_recent_blocks(limit: int = 10):
     for b_num in range(latest, start - 1, -1):
         try:
             b = w3.eth.get_block(b_num, full_transactions=True)
+            batch_id = web3_service.find_batch_by_block(b.hash.hex())
+            product_name = None
+            batch_status = None
+            if batch_id and not str(batch_id).startswith("AMBIGUOUS:"):
+                chain_info = web3_service.get_batch_from_chain(batch_id)
+                if chain_info:
+                    product_name = chain_info.get("product_name")
+                    batch_status = chain_info.get("status")
+
+            tx_summaries = []
+            for tx in b.transactions[:5]:
+                tx_h = tx.hash.hex()
+                t_bid = web3_service.find_batch_by_tx_hash(tx_h)
+                tx_summaries.append({
+                    "hash": tx_h,
+                    "from": tx["from"],
+                    "to": tx["to"],
+                    "gas": tx["gas"],
+                    "batch_id": t_bid if (t_bid and t_bid != "UNRELATED_TX") else None
+                })
+
             blocks.append({
                 "number": b.number,
                 "hash": b.hash.hex(),
                 "timestamp": b.timestamp,
                 "transaction_count": len(b.transactions),
                 "gas_used": b.gasUsed,
-                "transactions": [
-                    {
-                        "hash": tx.hash.hex(),
-                        "from": tx["from"],
-                        "to": tx["to"],
-                        "gas": tx["gas"]
-                    }
-                    for tx in b.transactions[:5]
-                ]
+                "batch_id": batch_id if (batch_id and not str(batch_id).startswith("AMBIGUOUS:")) else None,
+                "product_name": product_name,
+                "batch_status": batch_status,
+                "transactions": tx_summaries
             })
         except Exception:
             continue

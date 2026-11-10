@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FileText, Download, Copy, Check, ShieldCheck, AlertCircle, CheckCircle2, FileCheck } from "lucide-react";
+import { Icons } from "../ui/Icons";
 import { api } from "../../services/api";
 
 export default function AuditorWorkspace({ batches = [], activeBatchId = "" }) {
@@ -52,50 +52,50 @@ export default function AuditorWorkspace({ batches = [], activeBatchId = "" }) {
   const complianceStandards = [
     {
       code: "FDA 21 CFR § 11.10(a)",
-      title: "System Validation & Integrity",
-      desc: "Mathematical certainty of telemetry validation via ECDSA secp256k1 & Keccak-256.",
+      title: "System Validation & Mathematical Integrity",
+      desc: "Deterministic telemetry validation via canonical 78-byte packing and ECDSA secp256k1 recovery.",
       status: "COMPLIANT",
     },
     {
       code: "FDA 21 CFR § 11.10(e)",
-      title: "Immutable Audit Trails",
-      desc: "Computer-generated, timestamped on-chain event logs that cannot be altered or overwritten.",
+      title: "Immutable Event Audit Trails",
+      desc: "Computer-generated, timestamped on-chain event logs (BatchCreated, TelemetryVerified, CustodyTransferred).",
       status: "COMPLIANT",
     },
     {
       code: "FDA 21 CFR § 11.50",
-      title: "Signature Manifestation",
-      desc: "EIP-191 standardized digital signatures binding signer identity, timestamp, and coordinates.",
+      title: "Signature Manifestation & Binding",
+      desc: "EIP-191 standardized electronic signatures cryptographically binding signer address, timestamp, and coordinates.",
       status: "COMPLIANT",
     },
     {
-      code: "CDSCO / WHO GSP",
-      title: "Automated Cold-Chain Quarantine",
-      desc: "Algorithmic enforcement of 2.00°C – 8.00°C limits triggering autonomous replenishment.",
+      code: "CDSCO / WHO GDP",
+      title: "Automated Cold-Chain Quarantine Control",
+      desc: "Algorithmic enforcement of 2.00°C – 8.00°C limits triggering automated transition to QUARANTINED.",
       status: report?.cold_chain_compliant ? "COMPLIANT" : "BREACH DETECTED",
     },
   ];
 
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "10px 0" }}>
+    <div style={{ maxWidth: "1000px", margin: "0 auto", paddingBottom: "32px", display: "flex", flexDirection: "column", gap: "20px" }}>
       {/* Header Banner */}
-      <div className="glass-panel" style={{ padding: "20px 24px", marginBottom: "20px" }}>
+      <div className="dash-card" style={{ padding: "24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <FileCheck size={22} color="var(--purple-accent)" />
-              <h2 className="font-display" style={{ fontSize: "18px", fontWeight: "700", color: "#FFFFFF" }}>
-                Regulatory Compliance & Audit Inspector
+              <Icons.FileText size={22} color="var(--dash-blue-accent)" />
+              <h2 className="font-display" style={{ fontSize: "20px", fontWeight: "700", color: "var(--dash-text-primary)" }}>
+                Regulatory Compliance & Forensic Audit Inspector
               </h2>
             </div>
-            <p style={{ fontSize: "12px", color: "#94A3B8", marginTop: "4px" }}>
-              Designed to align with FDA 21 CFR Part 11, CDSCO, and WHO Good Storage and Distribution Practices.
+            <p style={{ fontSize: "13px", color: "var(--dash-text-secondary)", marginTop: "4px" }}>
+              Engineered to align with FDA 21 CFR Part 11 electronic records, CDSCO, and WHO Good Distribution Practices (GDP).
             </p>
           </div>
 
-          {/* Batch Selector dropdown */}
+          {/* Batch Selector dropdown & refresh */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "12px", color: "#94A3B8" }}>Audit Target:</span>
+            <span style={{ fontSize: "12px", color: "var(--dash-text-muted)" }}>Target lot:</span>
             <select
               value={selectedBatchId}
               onChange={(e) => {
@@ -103,120 +103,113 @@ export default function AuditorWorkspace({ batches = [], activeBatchId = "" }) {
                 loadReport(e.target.value);
               }}
               style={{
-                background: "var(--bg-surface-elevated)",
-                color: "var(--cyan-primary)",
-                border: "1px solid var(--border-medium)",
-                padding: "8px 12px",
-                borderRadius: "var(--radius-sm)",
+                background: "#18191E",
+                border: "1px solid var(--dash-border)",
+                color: "var(--dash-text-primary)",
+                padding: "6px 12px",
+                borderRadius: "var(--radius-full)",
                 fontSize: "12px",
-                fontFamily: "var(--font-mono)",
-                cursor: "pointer",
+                maxWidth: "200px",
                 outline: "none",
               }}
             >
               {batches.map((b) => (
                 <option key={b.batch_id} value={b.batch_id}>
-                  {b.product_name} ({b.batch_id.substring(0, 10)}...) - {b.status}
+                  {b.product_name} ({b.status})
                 </option>
               ))}
             </select>
+
+            <button
+              className="circle-arrow-btn"
+              onClick={() => loadReport(selectedBatchId)}
+              title="Refresh Audit Data"
+            >
+              <Icons.RotateCcw size={13} />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Compliance Standards Checklist */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-        gap: "14px",
-        marginBottom: "20px",
-      }}>
-        {complianceStandards.map((std, i) => (
-          <div key={i} className="glass-panel" style={{ padding: "14px 16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-              <span className="font-mono" style={{ fontSize: "11px", color: "var(--purple-accent)", fontWeight: "600" }}>
+      {/* Regulatory Standards Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+        {complianceStandards.map((std, idx) => (
+          <div key={idx} className="dash-card" style={{ padding: "18px 20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span className="font-mono" style={{ fontSize: "11px", fontWeight: "700", color: "var(--dash-blue-accent)" }}>
                 {std.code}
               </span>
-              <span style={{
-                fontSize: "10px",
-                fontWeight: "700",
-                color: std.status === "COMPLIANT" ? "var(--emerald-success)" : "var(--crimson-alert)",
-                background: std.status === "COMPLIANT" ? "rgba(0, 255, 136, 0.1)" : "rgba(255, 0, 85, 0.1)",
-                padding: "2px 6px",
-                borderRadius: "4px",
-              }}>
-                {std.status}
+              <span className={`dash-status-badge ${std.status === "COMPLIANT" ? "delivered" : "await"}`}>
+                {std.status.toLowerCase()}
               </span>
             </div>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#FFFFFF", marginBottom: "4px" }}>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: "var(--dash-text-primary)", marginBottom: "4px" }}>
               {std.title}
             </div>
-            <div style={{ fontSize: "11px", color: "#94A3B8", lineHeight: "1.4" }}>
+            <p style={{ fontSize: "11px", color: "var(--dash-text-muted)", lineHeight: "1.4", margin: 0 }}>
               {std.desc}
-            </div>
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Report Document Box */}
-      <div className="glass-panel" style={{ padding: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <FileText size={18} color="var(--cyan-primary)" />
-            <span className="font-display" style={{ fontSize: "15px", fontWeight: "700", color: "#FFFFFF" }}>
-              Generated Regulatory Certificate (Markdown)
+      {/* Generated Markdown Report Preview */}
+      <div className="dash-card" style={{ padding: "24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h3 className="font-display" style={{ fontSize: "16px", fontWeight: "700", color: "var(--dash-text-primary)" }}>
+              Deterministic Audit Report Artifact
+            </h3>
+            <span style={{ fontSize: "11px", color: "var(--dash-text-muted)" }}>
+              Cryptographically verified offline forensic export
             </span>
           </div>
 
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={{ display: "flex", gap: "10px" }}>
             <button
-              className="btn btn-secondary"
+              className="dash-pill-btn"
               onClick={handleCopy}
-              disabled={!report || loading}
-              style={{ padding: "6px 12px", fontSize: "12px" }}
+              disabled={!report?.markdown_report}
             >
-              {copied ? <Check size={14} color="var(--emerald-success)" /> : <Copy size={14} />}
+              {copied ? <Icons.Check size={13} color="var(--dash-green-pill-text)" /> : <Icons.Copy size={13} />}
               <span>{copied ? "Copied" : "Copy Markdown"}</span>
             </button>
             <button
-              className="btn btn-primary"
+              className="dash-pill-btn white-action"
               onClick={handleDownload}
-              disabled={!report || loading}
-              style={{ padding: "6px 12px", fontSize: "12px" }}
+              disabled={!report?.markdown_report}
             >
-              <Download size={14} />
-              <span>Download .md</span>
+              <Icons.Download size={13} />
+              <span>Download Report (.md)</span>
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "#94A3B8" }}>
-            Generating verifiable on-chain audit report...
+          <div style={{ padding: "40px", textAlign: "center", color: "var(--dash-text-muted)" }}>
+            Synthesizing cryptographic evidence and verifying on-chain event receipts...
           </div>
-        ) : report ? (
-          <div style={{
-            background: "var(--bg-surface-elevated)",
-            padding: "20px",
-            borderRadius: "var(--radius-sm)",
-            border: "1px solid var(--border-subtle)",
-          }}>
-            <pre style={{
-              margin: 0,
-              fontFamily: "var(--font-mono)",
-              fontSize: "12px",
-              color: "#CBD5E1",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              lineHeight: "1.6",
-            }}>
-              {report.markdown_report}
-            </pre>
+        ) : !report?.markdown_report ? (
+          <div style={{ padding: "40px", textAlign: "center", color: "var(--dash-text-muted)" }}>
+            Select a batch lot above to inspect its forensic audit trail.
           </div>
         ) : (
-          <div style={{ padding: "40px", textAlign: "center", color: "#94A3B8" }}>
-            No batch selected for regulatory audit.
-          </div>
+          <pre
+            style={{
+              background: "#101115",
+              padding: "20px",
+              borderRadius: "var(--radius-md)",
+              fontSize: "12px",
+              fontFamily: "var(--font-mono)",
+              overflowX: "auto",
+              color: "#34D399",
+              border: "1px solid var(--dash-border)",
+              maxHeight: "440px",
+              lineHeight: "1.5",
+            }}
+          >
+            {report.markdown_report}
+          </pre>
         )}
       </div>
     </div>

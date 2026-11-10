@@ -1,24 +1,64 @@
 import React from "react";
-import { Thermometer, ShieldCheck, Box, AlertTriangle } from "lucide-react";
+import { Icons } from "../ui/Icons";
 
-export default function MetricCards({ batches, lastPacket }) {
+export default function MetricCards({ batches = [], lastPacket }) {
   const totalBatches = batches.length;
   const inTransitCount = batches.filter((b) => b.status === "IN_TRANSIT").length;
   const quarantinedCount = batches.filter((b) => b.status === "QUARANTINED").length;
+  const deliveredCount = batches.filter((b) => b.status === "DELIVERED").length;
 
   const currentTemp = lastPacket ? lastPacket.temperature_celsius : 4.5;
   const isBreached = currentTemp > 8.0 || currentTemp < 2.0;
   const isNearLimit = (currentTemp > 7.0 && currentTemp <= 8.0) || (currentTemp < 2.5 && currentTemp >= 2.0);
 
-  let tempColor = "var(--cyan-primary)";
-  let tempStatus = "OPTIMAL (2°C - 8°C)";
+  let tempColor = "var(--brand-primary)";
+  let tempBg = "var(--brand-soft)";
+  let tempStatus = "2.0°C – 8.0°C NOMINAL";
+
   if (isBreached) {
     tempColor = "var(--crimson-alert)";
+    tempBg = "var(--crimson-soft)";
     tempStatus = "CRITICAL EXCURSION";
   } else if (isNearLimit) {
     tempColor = "var(--amber-warning)";
-    tempStatus = "NEAR THRESHOLD";
+    tempBg = "var(--amber-soft)";
+    tempStatus = "NEAR BOUNDARY";
   }
+
+  const metrics = [
+    {
+      title: "Total Registered Lots",
+      value: totalBatches,
+      subtitle: `${inTransitCount} Active in Transit`,
+      icon: Icons.Box,
+      color: "var(--brand-primary)",
+      bg: "var(--brand-soft)",
+    },
+    {
+      title: "Live Core Temperature",
+      value: `${currentTemp.toFixed(2)}°C`,
+      subtitle: tempStatus,
+      icon: Icons.Thermometer,
+      color: tempColor,
+      bg: tempBg,
+    },
+    {
+      title: "Monotonic Nonce Checkpoint",
+      value: lastPacket ? `#${lastPacket.nonce}` : "#0",
+      subtitle: "EIP-191 Verified On-Chain",
+      icon: Icons.ShieldCheck,
+      color: "var(--emerald-success)",
+      bg: "var(--emerald-soft)",
+    },
+    {
+      title: "Quarantined Lots",
+      value: quarantinedCount,
+      subtitle: quarantinedCount > 0 ? "Replenishment Triggered" : "Zero Breaches Detected",
+      icon: quarantinedCount > 0 ? Icons.AlertTriangle : Icons.CheckCircle2,
+      color: quarantinedCount > 0 ? "var(--crimson-alert)" : "var(--emerald-success)",
+      bg: quarantinedCount > 0 ? "var(--crimson-soft)" : "var(--emerald-soft)",
+    },
+  ];
 
   return (
     <div style={{
@@ -27,69 +67,38 @@ export default function MetricCards({ batches, lastPacket }) {
       gap: "16px",
       marginBottom: "20px",
     }}>
-      {/* Metric 1: Batches */}
-      <div className="glass-panel" style={{ padding: "16px 20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: "500" }}>Total Batches</span>
-          <Box size={18} color="var(--cyan-primary)" />
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-          <span className="font-display" style={{ fontSize: "28px", fontWeight: "700", color: "#FFFFFF" }}>
-            {totalBatches}
-          </span>
-          <span style={{ fontSize: "12px", color: "var(--cyan-primary)" }}>
-            {inTransitCount} In Transit
-          </span>
-        </div>
-      </div>
+      {metrics.map((m, idx) => {
+        const Icon = m.icon;
+        return (
+          <div key={idx} className="card" style={{ padding: "18px 20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: "500" }}>
+                {m.title}
+              </span>
+              <div style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "var(--radius-sm)",
+                background: m.bg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: m.color,
+              }}>
+                <Icon size={17} />
+              </div>
+            </div>
 
-      {/* Metric 2: Live Core Temperature */}
-      <div className="glass-panel" style={{ padding: "16px 20px", borderColor: isBreached ? "var(--crimson-alert)" : "var(--border-subtle)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: "500" }}>Live Temperature</span>
-          <Thermometer size={18} color={tempColor} />
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: "10px" }}>
-          <span className="font-mono" style={{ fontSize: "28px", fontWeight: "700", color: tempColor }}>
-            {currentTemp.toFixed(2)}°C
-          </span>
-          <span className="font-mono" style={{ fontSize: "11px", color: tempColor, fontWeight: "600" }}>
-            {tempStatus}
-          </span>
-        </div>
-      </div>
+            <div className="font-display" style={{ fontSize: "24px", fontWeight: "800", color: "var(--text-primary)", marginBottom: "4px" }}>
+              {m.value}
+            </div>
 
-      {/* Metric 3: Cryptographic Nonces */}
-      <div className="glass-panel" style={{ padding: "16px 20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: "500" }}>Signed Checkpoints</span>
-          <ShieldCheck size={18} color="var(--emerald-success)" />
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-          <span className="font-mono" style={{ fontSize: "28px", fontWeight: "700", color: "#FFFFFF" }}>
-            {lastPacket ? `#${lastPacket.nonce}` : "#0"}
-          </span>
-          <span style={{ fontSize: "12px", color: "var(--emerald-success)" }}>
-            secp256k1 Verified
-          </span>
-        </div>
-      </div>
-
-      {/* Metric 4: Quarantined Count */}
-      <div className="glass-panel" style={{ padding: "16px 20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-          <span style={{ fontSize: "12px", color: "#94A3B8", fontWeight: "500" }}>Quarantined Batches</span>
-          <AlertTriangle size={18} color={quarantinedCount > 0 ? "var(--crimson-alert)" : "var(--emerald-success)"} />
-        </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
-          <span className="font-display" style={{ fontSize: "28px", fontWeight: "700", color: quarantinedCount > 0 ? "var(--crimson-alert)" : "#FFFFFF" }}>
-            {quarantinedCount}
-          </span>
-          <span style={{ fontSize: "12px", color: quarantinedCount > 0 ? "var(--crimson-alert)" : "var(--emerald-success)" }}>
-            {quarantinedCount > 0 ? "Replenishment Triggered" : "Zero Breaches"}
-          </span>
-        </div>
-      </div>
+            <div style={{ fontSize: "11px", fontWeight: "600", color: m.color }}>
+              {m.subtitle}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

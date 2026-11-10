@@ -15,6 +15,7 @@ from app.engine.routes import interpolate_route_position, DEFAULT_WAYPOINTS
 class AttackType(str, Enum):
     NONE = "NONE"
     COMPRESSOR_FAILURE = "COMPRESSOR_FAILURE"
+    FREEZING_EVENT = "FREEZING_EVENT"
     MITM_ALTERATION = "MITM_ALTERATION"
     REPLAY_ATTACK = "REPLAY_ATTACK"
     GEOFENCE_DEVIATION = "GEOFENCE_DEVIATION"
@@ -63,6 +64,11 @@ class TransitSimulator:
         """Resets attack mode to nominal operation."""
         self.active_attack = AttackType.NONE
         self.tamper_temp_delta = 0.0
+        # Restore nominal setpoint if temperature wandered into breach territory
+        if self.current_temp > 8.0:
+            self.current_temp = 5.0
+        elif self.current_temp < 2.0:
+            self.current_temp = 4.0
 
     def step(self, delta_t: float = 1.0, current_time: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -75,9 +81,13 @@ class TransitSimulator:
         passive_heat_gain = -self.insulation_k * (self.current_temp - self.ambient_temp) * delta_t
 
         if self.active_attack == AttackType.COMPRESSOR_FAILURE:
-            # Compressor mechanical failure: cooling turns completely off
+            # Compressor mechanical failure: cooling turns completely off, rapid warming
             self.compressor_active = False
             active_cooling = 0.0
+        elif self.active_attack == AttackType.FREEZING_EVENT:
+            # Thermostat runaway: over-cooling drives temperature below freezing point
+            self.compressor_active = True
+            active_cooling = (self.cooling_power * 2.8 * delta_t)
         else:
             # Normal compressor hysteresis cycle (3.8°C - 5.2°C)
             if self.current_temp >= 5.2:

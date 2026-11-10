@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import L from "leaflet";
-import { Navigation } from "lucide-react";
+import "leaflet/dist/leaflet.css";
+import { Icons } from "../ui/Icons";
 
-export default function TransitMap({ lastPacket }) {
+export default function TransitMap({ lastPacket, height = "320px" }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const vehicleMarkerRef = useRef(null);
@@ -12,7 +13,7 @@ export default function TransitMap({ lastPacket }) {
   const defaultLat = 12.9716;
   const defaultLon = 77.5946;
 
-  // Major corridor waypoints
+  // Major corridor waypoints (Hyderabad -> Bangalore -> Chennai NH44)
   const routeCoordinates = [
     [17.5186, 78.5833], // Hyderabad Pharma City
     [17.3850, 78.4867],
@@ -32,47 +33,55 @@ export default function TransitMap({ lastPacket }) {
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
+    let resizeObserver = null;
+
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
         zoomControl: false,
+        preferCanvas: true,
       }).setView([15.2, 78.5], 6);
 
-      // High-reliability, zero-cost, watermark-free OpenStreetMap tile layer with cyber-clinical dark filter
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        className: "dark-tiles",
+      // Dedicated OpenStreetMap tile provider with local dark filter (Zero API key required, zero watermarks)
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+        className: "dark-map-tiles",
         maxZoom: 19,
+        minZoom: 4,
+        crossOrigin: true,
       }).addTo(map);
 
-      // Draw corridor route
+      // Top-right zoom control
+      L.control.zoom({ position: "topright" }).addTo(map);
+
+      // Draw corridor route in soft electric blue
       const polyline = L.polyline(routeCoordinates, {
-        color: "#00F0FF",
-        weight: 3,
-        opacity: 0.7,
-        dashArray: "6, 8",
+        color: "#4F80F8",
+        weight: 3.5,
+        opacity: 0.85,
+        dashArray: "6, 6",
       }).addTo(map);
       polylineRef.current = polyline;
 
       // Add Start (Hyderabad) & End (Chennai) Markers
-      L.circleMarker([17.5186, 78.5833], { radius: 6, color: "#A855F7", fillOpacity: 0.9 })
+      L.circleMarker([17.5186, 78.5833], { radius: 7, color: "#8B5CF6", fillColor: "#A78BFA", fillOpacity: 0.95 })
         .addTo(map)
-        .bindPopup("<b>Genesis</b>: BioVax Pharma City, Hyderabad");
+        .bindPopup("<div style='font-family:sans-serif;font-size:12px;color:#0C0D11;'><b>Genesis Lot Origin</b><br/>BioVax Pharma City, Hyderabad</div>");
 
-      L.circleMarker([13.0604, 80.2496], { radius: 6, color: "#00FF88", fillOpacity: 0.9 })
+      L.circleMarker([13.0604, 80.2496], { radius: 7, color: "#10B981", fillColor: "#34D399", fillOpacity: 0.95 })
         .addTo(map)
-        .bindPopup("<b>Destination</b>: Apollo Specialty Hospital, Chennai");
+        .bindPopup("<div style='font-family:sans-serif;font-size:12px;color:#0C0D11;'><b>Clinical Destination</b><br/>Apollo Specialty Hospital, Chennai</div>");
 
-      // Custom Vehicle Pulsing Icon
+      // Custom Vehicle Marker with live radar pulse
       const vehicleIcon = L.divIcon({
         className: "custom-vehicle-marker",
         html: `<div style="
           width: 18px;
           height: 18px;
-          background: #00F0FF;
+          background: #4F80F8;
           border: 2px solid #FFFFFF;
           border-radius: 50%;
-          box-shadow: 0 0 14px #00F0FF;
-          animation: beacon-pulse 1.8s infinite;
+          box-shadow: 0 0 14px #4F80F8;
+          cursor: pointer;
         "></div>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9],
@@ -82,9 +91,28 @@ export default function TransitMap({ lastPacket }) {
       vehicleMarkerRef.current = marker;
 
       mapInstanceRef.current = map;
+
+      // Handle resize and visibility triggers
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 150);
+
+      if (window.ResizeObserver && mapContainerRef.current) {
+        resizeObserver = new ResizeObserver(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize();
+          }
+        });
+        resizeObserver.observe(mapContainerRef.current);
+      }
     }
 
     return () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -105,8 +133,8 @@ export default function TransitMap({ lastPacket }) {
 
       if (lastPacket.waypoint_label) {
         vehicleMarkerRef.current.bindPopup(`
-          <div style="font-family: sans-serif; font-size: 12px; color: #111;">
-            <b>${lastPacket.node_id || "Reefer Fleet 04"}</b><br/>
+          <div style="font-family: sans-serif; font-size: 12px; color: #0C0D11; padding: 4px;">
+            <b>${lastPacket.node_id || "ColdLogix Reefer 04"}</b><br/>
             Temp: <b>${lastPacket.temperature_celsius}°C</b><br/>
             Location: ${lastPacket.waypoint_label}
           </div>
@@ -116,16 +144,16 @@ export default function TransitMap({ lastPacket }) {
   }, [lastPacket]);
 
   return (
-    <div className="glass-panel" style={{ padding: "20px", marginBottom: "20px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Navigation size={18} color="var(--cyan-primary)" />
-          <span className="font-display" style={{ fontSize: "15px", fontWeight: "700", color: "#FFFFFF" }}>
-            Interstate Cold-Chain Logistics Map
+    <div className="dash-card" style={{ padding: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Icons.Navigation size={18} color="var(--dash-blue-accent)" />
+          <span className="font-display" style={{ fontSize: "14px", fontWeight: "700", color: "var(--dash-text-primary)" }}>
+            Interstate Fleet Transit Corridor (NH44)
           </span>
         </div>
-        <div className="font-mono" style={{ fontSize: "12px", color: "#94A3B8" }}>
-          Waypoint: {lastPacket?.waypoint_label || "En route to Apollo Specialty Hospital, Chennai"}
+        <div style={{ fontSize: "12px", color: "var(--dash-text-muted)" }}>
+          Corridor: <span style={{ fontWeight: "600", color: "var(--dash-text-secondary)" }}>{lastPacket?.waypoint_label || "En route NH44 to Chennai"}</span>
         </div>
       </div>
 
@@ -133,10 +161,11 @@ export default function TransitMap({ lastPacket }) {
         ref={mapContainerRef}
         style={{
           width: "100%",
-          height: "320px",
+          height: height,
           borderRadius: "var(--radius-md)",
           overflow: "hidden",
-          border: "1px solid var(--border-subtle)",
+          border: "1px solid var(--dash-border)",
+          background: "#0C0D11",
         }}
       />
     </div>

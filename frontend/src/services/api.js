@@ -25,6 +25,9 @@ export const api = {
   getBatches: () => request("/batches"),
   createBatch: (data) => request("/batches", { method: "POST", body: JSON.stringify(data) }),
   getBatchDetail: (batchId) => request(`/batches/${batchId}`),
+  linkReplacement: (batchId, data) => request(`/batches/${batchId}/link-replacement`, { method: "POST", body: JSON.stringify(data) }),
+  autonomousRecovery: (batchId, data = {}) => request(`/batches/${batchId}/autonomous-recovery`, { method: "POST", body: JSON.stringify(data) }),
+  triggerDemoQuarantine: () => request("/batches/trigger-demo-quarantine", { method: "POST" }),
 
   // Custody Handover
   initiateHandover: (data) => request("/handover/initiate", { method: "POST", body: JSON.stringify(data) }),
@@ -41,6 +44,6 @@ export const api = {
   getRecentBlocks: (limit = 10) => request(`/blockchain/blocks?limit=${limit}`),
 
   // Consumer Verification & Audit
-  verifyBatch: (batchId) => request(`/verify/${batchId}`),
-  getAuditReport: (batchId) => request(`/audit/${batchId}/report`),
+  verifyBatch: (batchId) => request(`/verify/${encodeURIComponent(batchId)}`),
+  getAuditReport: (batchId) => request(`/audit/${encodeURIComponent(batchId)}/report`),
 };

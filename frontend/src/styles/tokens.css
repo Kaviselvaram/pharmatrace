@@ -1,51 +1,108 @@
 :root {
-  /* Surface & Canvas Colors */
-  --bg-canvas: #07090E;
-  --bg-surface: #0E131F;
-  --bg-surface-elevated: #151C2E;
-  --bg-surface-hover: #1C253D;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.15);
-  --border-active: rgba(0, 240, 255, 0.5);
+  /* ==========================================================================
+     REFERENCE 1: PUBLIC PORTAL (LIGHT EDITORIAL AESTHETICS)
+     ========================================================================== */
+  --portal-bg: #FFFFFF;
+  --portal-bg-subtle: #F8F9FA;
+  --portal-bg-canvas: #FAFAFB;
+  --portal-text-primary: #111827;
+  --portal-text-secondary: #4B5563;
+  --portal-text-muted: #6B7280;
+  --portal-border-subtle: #E5E7EB;
+  --portal-border-medium: #D1D5DB;
+  --portal-pill-bg: #F3F4F6;
+  --portal-pill-border: #E5E7EB;
+  --portal-accent-blue: #2563EB;
+  --portal-dark-pill: #111827;
 
-  /* Cyber-Clinical Color Palette */
-  --cyan-primary: #00F0FF;
-  --cyan-dim: rgba(0, 240, 255, 0.15);
-  --cyan-glow: 0 0 20px rgba(0, 240, 255, 0.35);
+  /* ==========================================================================
+     REFERENCE 2: OPERATIONAL DASHBOARD (DARK OBSIDIAN / CARBON AESTHETICS)
+     ========================================================================== */
+  --dash-bg: #0C0D11;
+  --dash-surface: #16161A;
+  --dash-surface-hover: #1E1E24;
+  --dash-surface-elevated: #22232A;
+  --dash-border: #232328;
+  --dash-border-subtle: #1C1D22;
+  --dash-border-hover: #32333B;
 
-  --emerald-success: #00FF88;
-  --emerald-dim: rgba(0, 255, 136, 0.15);
-  --emerald-glow: 0 0 20px rgba(0, 255, 136, 0.35);
+  --dash-text-primary: #F4F4F6;
+  --dash-text-secondary: #A1A1AA;
+  --dash-text-muted: #71717A;
+  --dash-text-inverse: #0C0D11;
 
-  --amber-warning: #FFB800;
-  --amber-dim: rgba(255, 184, 0, 0.15);
-  --amber-glow: 0 0 20px rgba(255, 184, 0, 0.35);
+  /* Reference 2 Highlights & Pastel Accent Colors */
+  --dash-blue-accent: #4F80F8;
+  --dash-blue-bar: #6E97F6;
+  --dash-blue-bar-light: #93B4FC;
+  --dash-blue-circle: #3069F7;
 
-  --crimson-alert: #FF0055;
-  --crimson-dim: rgba(255, 0, 85, 0.18);
-  --crimson-glow: 0 0 25px rgba(255, 0, 85, 0.45);
+  /* Reference 2 Metric Change Pills */
+  --dash-green-pill-bg: #132D24;
+  --dash-green-pill-text: #34D399;
+  --dash-red-pill-bg: #35191F;
+  --dash-red-pill-text: #F87171;
 
-  --purple-accent: #A855F7;
-  --purple-dim: rgba(168, 85, 247, 0.15);
+  /* Reference 2 Order Category Card Headers (Pastels) */
+  --dash-cat-blue-bg: #709BF5;
+  --dash-cat-peach-bg: #F6A378;
+  --dash-cat-yellow-bg: #F5CF78;
+  --dash-cat-green-bg: #67E0A3;
 
-  /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Reference 2 Table Status Badges */
+  --dash-status-transit-bg: #2B1D45;
+  --dash-status-transit-text: #C084FC;
+  --dash-status-delivered-bg: #143528;
+  --dash-status-delivered-text: #4ADE80;
+  --dash-status-await-bg: #381A22;
+  --dash-status-await-text: #FB7185;
+  --dash-status-created-bg: #2B2313;
+  --dash-status-created-text: #FBBF24;
+  --dash-status-replenished-bg: #11333B;
+  --dash-status-replenished-text: #38BDF8;
 
-  /* Elevation & Shadows */
-  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
-  --glass-bg: rgba(14, 19, 31, 0.82);
-  --glass-blur: blur(14px);
+  /* Donut Chart Category Colors */
+  --donut-c1: #6E97F6; /* Blue */
+  --donut-c2: #F6A378; /* Orange */
+  --donut-c3: #F5CF78; /* Yellow */
+  --donut-c4: #FB7185; /* Pink */
+  --donut-c5: #4ADE80; /* Teal/Green */
 
-  /* Layout Spacing */
+  /* ==========================================================================
+     GLOBAL TYPOGRAPHY & MEASUREMENTS
+     ========================================================================== */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Radii matching Reference 2 smooth cards & pills */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  /* Elevation Shadows */
+  --shadow-obsidian-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-obsidian-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-obsidian-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
+
+  /* Spacing */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
+  --space-2xl: 48px;
+
+  /* Z-Index Hierarchy */
+  --z-base: 1;
+  --z-nav: 50;
+  --z-sticky: 100;
+  --z-dropdown: 200;
+  --z-popover: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-toast: 1000;
 }

@@ -9,7 +9,11 @@
     "test": "npm --prefix contracts test",
     "test:contracts": "npm --prefix contracts test",
     "test:backend": "PYTHONPATH=backend .venv/bin/pytest -v backend/tests",
-    "verify": "./scripts/verify_all.sh"
+    "verify": "./scripts/verify_all.sh",
+    "demo:start": "./scripts/demo_start.sh",
+    "demo:stop": "./scripts/demo_stop.sh",
+    "demo:status": "./scripts/demo_status.sh",
+    "demo:seed": ".venv/bin/python scripts/seed_demo_data.py"
   },
   "keywords": [
     "blockchain",

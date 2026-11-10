@@ -64,6 +64,18 @@ class TelemetryPacketSchema(BaseModel):
     attack_mode: Optional[str] = "NONE"
 
 
+class TelemetrySubmitRequest(BaseModel):
+    temperature_celsius: float
+    latitude: float
+    longitude: float
+    timestamp: int
+    nonce: int
+    signature_v: int
+    signature_r: str
+    signature_s: str
+
+
+
 class BlockchainStatusResponse(BaseModel):
     connected: bool
     chain_id: int
@@ -84,3 +96,4 @@ class AuditReportResponse(BaseModel):
     is_authentic: bool
     cold_chain_compliant: bool
     markdown_report: str
+    replacement_batch_id: Optional[str] = None

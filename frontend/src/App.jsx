@@ -1,41 +1,66 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
-import MetricCards from "./components/dashboard/MetricCards";
-import TelemetryWaveform from "./components/dashboard/TelemetryWaveform";
+import LandingPage from "./components/portal/LandingPage";
+import LoginPage from "./components/portal/LoginPage";
+import OverviewView from "./components/dashboard/OverviewView";
+import BatchesView from "./components/dashboard/BatchesView";
+import BatchDetailView from "./components/dashboard/BatchDetailView";
+import MonitoringView from "./components/dashboard/MonitoringView";
 import TransitMap from "./components/dashboard/TransitMap";
-import BatchTable from "./components/dashboard/BatchTable";
+import CustodyView from "./components/dashboard/CustodyView";
+import SecurityCenterView from "./components/dashboard/SecurityCenterView";
+import RecoveryView from "./components/dashboard/RecoveryView";
 import ChaosStudio from "./components/chaos/ChaosStudio";
 import BlockExplorer from "./components/explorer/BlockExplorer";
 import QRVerifyPortal from "./components/portal/QRVerifyPortal";
 import AuditorWorkspace from "./components/auditor/AuditorWorkspace";
 import CreateBatchModal from "./components/modals/CreateBatchModal";
 import HandoverModal from "./components/modals/HandoverModal";
+import { Icons } from "./components/ui/Icons";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 
 import { useWebSocket } from "./hooks/useWebSocket";
 import { api } from "./services/api";
 
 export default function App() {
-  const getInitialTab = () => {
-    const hash = window.location.hash.replace("#", "");
-    const validTabs = ["dashboard", "map", "chaos", "explorer", "verify", "auditor"];
-    return validTabs.includes(hash) ? hash : "dashboard";
+  const parseRoute = () => {
+    const rawHash = window.location.hash.replace("#", "") || "portal";
+    if (rawHash.startsWith("batches/")) {
+      const id = rawHash.replace("batches/", "");
+      return { tab: "batch-detail", param: id };
+    }
+    if (rawHash.startsWith("verify/") || rawHash.startsWith("verify?")) {
+      const param = rawHash.includes("?")
+        ? new URLSearchParams(rawHash.split("?")[1]).get("batch") || new URLSearchParams(rawHash.split("?")[1]).get("id")
+        : rawHash.replace("verify/", "");
+      return { tab: "verify", param: param ? decodeURIComponent(param).trim() : null };
+    }
+    const legacyMap = { dashboard: "overview" };
+    return { tab: legacyMap[rawHash] || rawHash, param: null };
   };
 
-  const [activeTab, setActiveTabState] = useState(getInitialTab);
+  const [route, setRoute] = useState(parseRoute);
+  const activeTab = route.tab;
+  const activeParam = route.param;
 
-  const setActiveTab = (tab) => {
-    setActiveTabState(tab);
-    window.location.hash = tab;
+  const navigate = (tab, param = null) => {
+    if (tab === "batch-detail" && param) {
+      window.location.hash = `batches/${param}`;
+      setRoute({ tab: "batch-detail", param });
+    } else if (tab === "verify" && param) {
+      window.location.hash = `verify/${param}`;
+      setRoute({ tab: "verify", param });
+    } else {
+      window.location.hash = tab;
+      setRoute({ tab, param: null });
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "");
-      const validTabs = ["dashboard", "map", "chaos", "explorer", "verify", "auditor"];
-      if (validTabs.includes(hash)) {
-        setActiveTabState(hash);
-      }
+      setRoute(parseRoute());
     };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
@@ -49,13 +74,13 @@ export default function App() {
   const [telemetryHistory, setTelemetryHistory] = useState([]);
   const [blockchainStatus, setBlockchainStatus] = useState(null);
 
-  // Modals
+  // Modals & Toast Notifications
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isHandoverModalOpen, setIsHandoverModalOpen] = useState(false);
   const [handoverBatch, setHandoverBatch] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Fetch Batches
+  // Fetch Batches from API
   const loadBatches = useCallback(async () => {
     try {
       const data = await api.getBatches();
@@ -68,7 +93,7 @@ export default function App() {
     }
   }, [activeBatchId]);
 
-  // Fetch Blockchain Status
+  // Fetch Blockchain Status from API
   const loadBlockchainStatus = useCallback(async () => {
     try {
       const status = await api.getBlockchainStatus();
@@ -99,11 +124,20 @@ export default function App() {
         const updated = [...prev, packet];
         return updated.length > 40 ? updated.slice(updated.length - 40) : updated;
       });
+    } else if (msg.type === "BATCH_CREATED") {
+      showToast(`BATCH CREATED: New pharmaceutical lot minted on-chain: ${msg.data.batch_id?.substring(0, 10)}...`, "success");
+      loadBatches();
+    } else if (msg.type === "BATCH_REPLENISHED") {
+      showToast(`BATCH REPLENISHED: Linked replacement lot on-chain: ${msg.data.replacement_batch_id?.substring(0, 10)}...`, "success");
+      loadBatches();
+    } else if (msg.type === "HANDOVER_INITIATED") {
+      showToast("HANDOVER INITIATED: 2-of-2 custody transfer initiated on-chain", "info");
+      loadBatches();
     } else if (msg.type === "COLD_CHAIN_EXCURSION") {
-      showToast(`CRITICAL: Cold-Chain Excursion detected for batch ${msg.data.batch_id?.substring(0, 10)}! Status: QUARANTINED`, "error");
+      showToast(`CRITICAL: Cold-Chain Excursion for batch ${msg.data.batch_id?.substring(0, 10)}! Status: QUARANTINED`, "error");
       loadBatches();
     } else if (msg.type === "AUTONOMOUS_RECOVERY") {
-      showToast(`AUTONOMOUS RECOVERY: Replacement dispatch order placed for lot ${msg.data.original_batch_id?.substring(0, 10)}!`, "warning");
+      showToast(`AUTONOMOUS RECOVERY: Replacement lot dispatched for ${msg.data.original_batch_id?.substring(0, 10)}!`, "warning");
       loadBatches();
     } else if (msg.type === "MITM_TAMPER_ATTACK") {
       showToast(`SECURITY ALERT: Cryptographic signature mismatch! Reverted on EVM: ${msg.data.batch_id?.substring(0, 10)}`, "error");
@@ -125,7 +159,7 @@ export default function App() {
       await api.startSimulation(batchId);
       setIsSimulationRunning(true);
       setActiveBatchId(batchId);
-      showToast(`Simulation started for batch ${batchId.substring(0, 10)}...`, "info");
+      showToast(`Telemetry simulation started for lot ${batchId.substring(0, 10)}...`, "info");
     } catch (err) {
       showToast(`Failed to start simulation: ${err.message}`, "error");
     }
@@ -148,89 +182,201 @@ export default function App() {
 
   function handleOpenQR(batchId) {
     setActiveBatchId(batchId);
-    setActiveTab("verify");
+    navigate("verify", batchId);
+  }
+
+  function handleViewBatchDetails(batchId) {
+    setActiveBatchId(batchId);
+    navigate("batch-detail", batchId);
+  }
+
+  // If on public portal landing page
+  if (activeTab === "portal" || activeTab === "home") {
+    return (
+      <>
+        <LandingPage
+          onEnterApp={(dest) => navigate(dest || "overview")}
+          batches={batches}
+          lastPacket={lastPacket}
+        />
+        {/* Toast Notification Container */}
+        {toastMessage && (
+          <div className="toast-container">
+            <div className={`toast-item toast-${toastMessage.type}`}>
+              <span>{toastMessage.text}</span>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // If on login/access selection page
+  if (activeTab === "login") {
+    return (
+      <LoginPage
+        activeRole={activeRole}
+        onRoleSelect={setActiveRole}
+        onEnterWorkspace={() => navigate("overview")}
+        onCancel={() => navigate("portal")}
+      />
+    );
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-base)" }}>
-      {/* Top Navbar */}
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--dash-bg)" }}>
+      {/* Top Application Header */}
       <Navbar
         blockNumber={blockchainStatus?.block_number}
         connected={isConnected}
         activeRole={activeRole}
         onRoleChange={setActiveRole}
         onOpenCreateModal={() => setIsCreateModalOpen(true)}
+        onOpenPortal={() => navigate("portal")}
+        onNavigateTab={(t) => navigate(t)}
       />
 
-      {/* Toast Notification */}
+      {/* Toast Notification Container */}
       {toastMessage && (
-        <div style={{
-          position: "fixed",
-          bottom: "24px",
-          right: "24px",
-          zIndex: 9999,
-          background: toastMessage.type === "error" ? "rgba(255, 0, 85, 0.95)" : (toastMessage.type === "warning" ? "rgba(255, 170, 0, 0.95)" : "rgba(0, 240, 255, 0.95)"),
-          color: "#07090E",
-          padding: "12px 20px",
-          borderRadius: "var(--radius-md)",
-          fontWeight: "700",
-          fontSize: "13px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          animation: "fadeIn 0.2s ease",
-        }}>
-          <span>{toastMessage.text}</span>
+        <div className="toast-container">
+          <div className={`toast-item toast-${toastMessage.type}`}>
+            <span>{toastMessage.text}</span>
+          </div>
         </div>
       )}
 
-      {/* Main Content Layout */}
-      <div style={{ display: "flex", flex: 1, padding: "0 16px 16px 16px", gap: "16px" }}>
-        {/* Left Sidebar Navigation */}
-        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Main Workspace Layout */}
+      <div style={{ display: "flex", flex: 1 }}>
+        {/* Left Sidebar Navigation (Reference 2) */}
+        <Sidebar
+          activeTab={activeTab === "batch-detail" ? "batches" : activeTab}
+          onTabChange={(tab) => navigate(tab)}
+          onExitToPortal={() => navigate("portal")}
+        />
 
-        {/* Dynamic Center Stage */}
-        <main style={{ flex: 1, minWidth: 0, overflowY: "auto" }}>
-          {activeTab === "dashboard" && (
-            <div>
-              <MetricCards batches={batches} lastPacket={lastPacket} />
+        {/* Dynamic Center Stage Content */}
+        <main style={{ flex: 1, minWidth: 0, padding: "20px 24px", overflowY: "auto" }}>
+          <ErrorBoundary key={activeTab}>
+          {activeTab === "overview" && (
+            <OverviewView
+              batches={batches}
+              activeBatchId={activeBatchId}
+              isSimulationRunning={isSimulationRunning}
+              lastPacket={lastPacket}
+              telemetryHistory={telemetryHistory}
+              onSelectBatch={setActiveBatchId}
+              onStartSimulation={handleStartSimulation}
+              onPauseSimulation={handlePauseSimulation}
+              onOpenHandoverModal={handleOpenHandover}
+              onOpenQRModal={handleOpenQR}
+              onViewBatchDetails={handleViewBatchDetails}
+              onNavigateTab={(t) => navigate(t)}
+            />
+          )}
 
-              <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "16px", marginBottom: "20px" }}>
-                <TelemetryWaveform
-                  history={telemetryHistory}
-                  lastPacket={lastPacket}
-                  minThreshold={2.0}
-                  maxThreshold={8.0}
-                />
-                <TransitMap lastPacket={lastPacket} />
-              </div>
+          {activeTab === "batches" && (
+            <BatchesView
+              batches={batches}
+              activeBatchId={activeBatchId}
+              isSimulationRunning={isSimulationRunning}
+              lastPacket={lastPacket}
+              onSelectBatch={setActiveBatchId}
+              onStartSimulation={handleStartSimulation}
+              onPauseSimulation={handlePauseSimulation}
+              onOpenHandoverModal={handleOpenHandover}
+              onOpenQRModal={handleOpenQR}
+              onOpenCreateModal={() => setIsCreateModalOpen(true)}
+              onViewBatchDetails={handleViewBatchDetails}
+            />
+          )}
 
-              <BatchTable
-                batches={batches}
-                activeBatchId={activeBatchId}
-                isSimulationRunning={isSimulationRunning}
-                onSelectBatch={setActiveBatchId}
-                onStartSimulation={handleStartSimulation}
-                onPauseSimulation={handlePauseSimulation}
-                onOpenHandoverModal={handleOpenHandover}
-                onOpenQRModal={handleOpenQR}
-              />
-            </div>
+          {activeTab === "batch-detail" && (
+            <BatchDetailView
+              batchId={activeParam || activeBatchId}
+              batches={batches}
+              onBack={() => navigate("batches")}
+              onOpenHandoverModal={handleOpenHandover}
+              onOpenQRModal={handleOpenQR}
+              onStartSimulation={handleStartSimulation}
+              onPauseSimulation={handlePauseSimulation}
+              isSimulationRunning={isSimulationRunning}
+            />
+          )}
+
+          {activeTab === "monitoring" && (
+            <MonitoringView
+              batches={batches}
+              activeBatchId={activeBatchId}
+              onSelectBatch={setActiveBatchId}
+              isSimulationRunning={isSimulationRunning}
+              onStartSimulation={handleStartSimulation}
+              onPauseSimulation={handlePauseSimulation}
+              lastPacket={lastPacket}
+              telemetryHistory={telemetryHistory}
+              isConnected={isConnected}
+            />
           )}
 
           {activeTab === "map" && (
-            <div>
-              <TransitMap lastPacket={lastPacket} />
-              <div className="glass-panel" style={{ padding: "20px", marginTop: "16px" }}>
-                <h3 className="font-display" style={{ fontSize: "16px", fontWeight: "700", color: "#FFFFFF", marginBottom: "8px" }}>
-                  Interstate Cold-Chain Route Telemetry Log
-                </h3>
-                <p style={{ fontSize: "12px", color: "#94A3B8" }}>
-                  Active Highway Corridor: NH44 (Hyderabad Pharma City → Bangalore Hub → Chennai Apollo Specialty Hospital). Every GPS coordinate packet is digitally signed on an edge virtualized reefer node.
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <TransitMap lastPacket={lastPacket} height="480px" />
+              <div className="dash-card" style={{ padding: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                  <Icons.Navigation size={18} color="var(--dash-blue-accent)" />
+                  <h3 className="font-display" style={{ fontSize: "16px", fontWeight: "700", color: "var(--dash-text-primary)" }}>
+                    National Highway 44 (NH44) Dedicated Pharma Corridor
+                  </h3>
+                </div>
+                <p style={{ fontSize: "13px", color: "var(--dash-text-secondary)", margin: 0, lineHeight: "1.5" }}>
+                  Route segment: Hyderabad Genome Valley (Genesis Lot) → Mahabubnagar → Kurnool → Anantapur → Bangalore Hub → Krishnagiri → Vellore → Chennai Apollo Specialty Hospital (Destination). Every waypoint update is verified by the reefer’s virtualized edge node.
                 </p>
               </div>
             </div>
+          )}
+
+          {activeTab === "custody" && (
+            <CustodyView
+              batches={batches}
+              onOpenHandoverModal={handleOpenHandover}
+            />
+          )}
+
+          {activeTab === "security" && (
+            <SecurityCenterView
+              batches={batches}
+              lastPacket={lastPacket}
+              onNavigateTab={(t) => navigate(t)}
+            />
+          )}
+
+          {activeTab === "recovery" && (
+            <RecoveryView
+              batches={batches}
+              onRefreshBatches={loadBatches}
+            />
+          )}
+
+          {activeTab === "explorer" && (
+            <BlockExplorer />
+          )}
+
+          {activeTab === "verify" && (
+            <QRVerifyPortal
+              batches={batches}
+              defaultBatchId={activeParam || activeBatchId}
+              onSelectBatch={(id) => {
+                setActiveBatchId(id);
+                navigate("verify", id);
+              }}
+              onViewBatchDetails={handleViewBatchDetails}
+            />
+          )}
+
+          {activeTab === "auditor" && (
+            <AuditorWorkspace
+              batches={batches}
+              activeBatchId={activeBatchId}
+            />
           )}
 
           {activeTab === "chaos" && (
@@ -242,28 +388,11 @@ export default function App() {
               onStartSimulation={handleStartSimulation}
               lastPacket={lastPacket}
               onAttackInjected={(type) => {
-                showToast(`Chaos Triggered: ${type}`, "warning");
+                showToast(`Chaos Fault Triggered: ${type}`, "warning");
               }}
             />
           )}
-
-          {activeTab === "explorer" && (
-            <BlockExplorer />
-          )}
-
-          {activeTab === "verify" && (
-            <QRVerifyPortal
-              batches={batches}
-              defaultBatchId={activeBatchId}
-            />
-          )}
-
-          {activeTab === "auditor" && (
-            <AuditorWorkspace
-              batches={batches}
-              activeBatchId={activeBatchId}
-            />
-          )}
+          </ErrorBoundary>
         </main>
       </div>
 
@@ -282,6 +411,7 @@ export default function App() {
         onClose={() => setIsHandoverModalOpen(false)}
         batch={handoverBatch}
         onHandoverComplete={() => {
+          showToast("Custody handover confirmed on-chain!", "success");
           loadBatches();
         }}
       />

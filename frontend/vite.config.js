@@ -18,4 +18,18 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-leaflet": ["leaflet"],
+          "vendor-gsap": ["gsap"],
+          "vendor-icons": ["lucide-react"],
+          "vendor-qrcode": ["qrcode"],
+        },
+      },
+    },
+  },
 });
